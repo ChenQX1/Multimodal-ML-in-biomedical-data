@@ -117,6 +117,7 @@ class BaseArgParser(object):
             cudnn.benchmark = args.cudnn_benchmark
         else:
             args.device = 'cpu'
+            # args.device = 'mps'
 
         # Set random seed for a deterministic run
         if args.deterministic:
