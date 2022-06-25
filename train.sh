@@ -1,5 +1,5 @@
-python train.py --data_dir=data/h5 \
-                --ckpt_path=ckpt/xnet_kin_90.pth.tar \
+python train.py --data_dir=data/sample \
+                --ckpt_path=ckpts/xnet_kin_90.pth.tar \
                 --save_dir=train_logs \
 		--name=Test \
 		--abnormal_prob=0.3 \

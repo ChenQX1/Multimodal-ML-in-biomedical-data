@@ -4,5 +4,6 @@ __pycache__
 .idea/
 ckpts/
 data/
+data_sample.tar
 results/
 logs/

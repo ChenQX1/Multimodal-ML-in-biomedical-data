@@ -1,0 +1,5 @@
+[start of epoch 1]
+[epoch: 1, iter: 0 / 2478, time: 0.82, cls_loss: 1.74]
+[epoch: 1, iter: 8 / 2478, time: 0.52, cls_loss: 1.12]
+[epoch: 1, iter: 16 / 2478, time: 0.43, cls_loss: 2.8]
+[epoch: 1, iter: 24 / 2478, time: 0.44, cls_loss: 2.28]

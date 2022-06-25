@@ -17,6 +17,6 @@ def npy2hdf5(data_dir, output_dir):
 
 
 if __name__ == "__main__":
-    data_dir = Path("./data")
-    output_dir = "./data/h5"
+    data_dir = Path("./data/sample")
+    output_dir = "./data/sample"
     npy2hdf5(data_dir, output_dir)
