@@ -5,6 +5,7 @@ from .base_arg_parser import BaseArgParser
 
 class TrainArgParser(BaseArgParser):
     """Argument parser for args used only in train mode."""
+
     def __init__(self):
         super(TrainArgParser, self).__init__()
         self.is_training = True
@@ -19,7 +20,8 @@ class TrainArgParser(BaseArgParser):
         self.parser.add_argument('--learning_rate', type=float, default=1e-1,
                                  help='Initial learning rate.')
         self.parser.add_argument('--lr_scheduler', type=str, default='cosine_warmup',
-                                 choices=('step', 'multi_step', 'plateau', 'cosine_warmup'),
+                                 choices=('step', 'multi_step',
+                                          'plateau', 'cosine_warmup'),
                                  help='LR scheduler to use.')
         self.parser.add_argument('--lr_decay_gamma', type=float, default=0.1,
                                  help='Multiply learning rate by this value every LR step (step and multi_step only).')
@@ -39,14 +41,20 @@ class TrainArgParser(BaseArgParser):
                                  help='Metric used to determine which checkpoint is best.')
         self.parser.add_argument('--max_eval', type=int, default=-1,
                                  help='Max number of examples to evaluate from the training set.')
-        self.parser.add_argument('--optimizer', type=str, default='sgd', choices=('sgd', 'adam'), help='Optimizer.')
-        self.parser.add_argument('--sgd_momentum', type=float, default=0.9, help='SGD momentum (SGD only).')
-        self.parser.add_argument('--sgd_dampening', type=float, default=0.9, help='SGD momentum (SGD only).')
-        self.parser.add_argument('--adam_beta_1', type=float, default=0.9, help='Adam beta 1 (Adam only).')
-        self.parser.add_argument('--adam_beta_2', type=float, default=0.999, help='Adam beta 2 (Adam only).')
+        self.parser.add_argument(
+            '--optimizer', type=str, default='sgd', choices=('sgd', 'adam'), help='Optimizer.')
+        self.parser.add_argument(
+            '--sgd_momentum', type=float, default=0.9, help='SGD momentum (SGD only).')
+        self.parser.add_argument(
+            '--sgd_dampening', type=float, default=0.9, help='SGD momentum (SGD only).')
+        self.parser.add_argument(
+            '--adam_beta_1', type=float, default=0.9, help='Adam beta 1 (Adam only).')
+        self.parser.add_argument(
+            '--adam_beta_2', type=float, default=0.999, help='Adam beta 2 (Adam only).')
         self.parser.add_argument('--weight_decay', type=float, default=5e-4,
                                  help='Weight decay (i.e., L2 regularization factor).')
-        self.parser.add_argument('--dropout_prob', type=float, default=0.0, help='Dropout probability.')
+        self.parser.add_argument(
+            '--dropout_prob', type=float, default=0.0, help='Dropout probability.')
         self.parser.add_argument('--hidden_dim', type=float, default=32,
                                  help='LSTM hidden state size (LRCN only).')
         self.parser.add_argument('--elastic_transform', type=util.str_to_bool, default=False,

@@ -1,4 +1,4 @@
-python train.py --data_dir=data/sample \
+python train.py --data_dir=data \
                 --ckpt_path=ckpts/xnet_kin_90.pth.tar \
                 --save_dir=train_logs \
 		--name=Test \

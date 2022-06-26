@@ -24,9 +24,11 @@ class PENetClassifier(nn.Module):
 
         self.in_conv = nn.Sequential(nn.Conv3d(self.num_channels, self.in_channels, kernel_size=7,
                                                stride=(1, 2, 2), padding=(3, 3, 3), bias=False),
-                                     nn.GroupNorm(self.in_channels // 16, self.in_channels),
+                                     nn.GroupNorm(
+                                         self.in_channels // 16, self.in_channels),
                                      nn.LeakyReLU(inplace=True))
-        self.max_pool = nn.MaxPool3d(kernel_size=(3, 3, 3), stride=2, padding=1)
+        self.max_pool = nn.MaxPool3d(
+            kernel_size=(3, 3, 3), stride=2, padding=1)
 
         # Encoders
         if model_depth != 50:
@@ -40,7 +42,7 @@ class PENetClassifier(nn.Module):
             out_channels = 2 ** i * 128
             stride = 1 if i == 0 else 2
             encoder = PENetEncoder(self.in_channels, out_channels, num_blocks, self.cardinality,
-                                  block_idx, total_blocks, stride=stride)
+                                   block_idx, total_blocks, stride=stride)
             self.encoders.append(encoder)
             self.in_channels = out_channels * PENetBottleneck.expansion
             block_idx += num_blocks
@@ -61,16 +63,19 @@ class PENetClassifier(nn.Module):
                 elif init_method == 'kaiming':
                     nn.init.kaiming_normal_(m.weight)
                 else:
-                    raise NotImplementedError('Invalid initialization method: {}'.format(self.init_method))
+                    raise NotImplementedError(
+                        'Invalid initialization method: {}'.format(self.init_method))
                 if hasattr(m, 'bias') and m.bias is not None:
                     if focal_pi is not None and hasattr(m, 'is_output_head') and m.is_output_head:
                         # Focal loss prior (~0.01 prob for positive, see RetinaNet Section 4.1)
-                        nn.init.constant_(m.bias, -math.log((1 - focal_pi) / focal_pi))
+                        nn.init.constant_(
+                            m.bias, -math.log((1 - focal_pi) / focal_pi))
                     else:
                         nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.GroupNorm) and m.affine:
                 # Gamma for last GroupNorm in each residual block gets set to 0
-                init_gamma = 0 if hasattr(m, 'is_last_norm') and m.is_last_norm else 1
+                init_gamma = 0 if hasattr(
+                    m, 'is_last_norm') and m.is_last_norm else 1
                 nn.init.constant_(m.weight, init_gamma)
                 nn.init.constant_(m.bias, 0)
 
@@ -113,22 +118,25 @@ class PENetClassifier(nn.Module):
             https://discuss.pytorch.org/t/how-to-load-part-of-pre-trained-model/1113/2
         """
         device = 'cuda:{}'.format(gpu_ids[0]) if len(gpu_ids) > 0 else 'cpu'
-        pretrained_dict = torch.load(ckpt_path, map_location=device)['model_state']
+        pretrained_dict = torch.load(ckpt_path, map_location=device)[
+            'model_state']
         model_dict = self.state_dict()
-        
+
         ############ Rename the parameters' name in the pretrained checkpoint #########
         new_pretrained_dict = {}
-        for k,v in pretrained_dict.items():
+        for k, v in pretrained_dict.items():
             old_key = k
             new_key = old_key.replace("xnet_blocks", "penet_blocks")
             new_pretrained_dict[old_key] = new_key
-        
+
         for old, new in new_pretrained_dict.items():
             pretrained_dict[new] = pretrained_dict.pop(old)
         ###############################################################################
         # Filter out unnecessary keys
-        pretrained_dict = {k[len('module.'):]: v for k, v in pretrained_dict.items()}
-        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+        pretrained_dict = {k[len('module.'):]: v for k,
+                           v in pretrained_dict.items()}
+        pretrained_dict = {k: v for k,
+                           v in pretrained_dict.items() if k in model_dict}
 
         # Overwrite entries in the existing state dict
         model_dict.update(pretrained_dict)

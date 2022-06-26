@@ -21,9 +21,11 @@ class PENet(nn.Module):
 
         self.in_conv = nn.Sequential(nn.Conv3d(self.num_channels, self.in_channels, kernel_size=7,
                                                stride=(1, 2, 2), padding=(3, 3, 3), bias=False),
-                                     nn.GroupNorm(self.in_channels // 16, self.in_channels),
+                                     nn.GroupNorm(
+                                         self.in_channels // 16, self.in_channels),
                                      nn.LeakyReLU(inplace=True))
-        self.max_pool = nn.MaxPool3d(kernel_size=(3, 3, 3), stride=2, padding=1)
+        self.max_pool = nn.MaxPool3d(
+            kernel_size=(3, 3, 3), stride=2, padding=1)
 
         # Encoders
         if model_depth != 50:
@@ -37,7 +39,7 @@ class PENet(nn.Module):
             out_channels = 2 ** i * 128
             stride = 1 if i == 0 else 2
             encoder = PENetEncoder(self.in_channels, out_channels, num_blocks, self.cardinality,
-                                  block_idx, total_blocks, stride=stride)
+                                   block_idx, total_blocks, stride=stride)
             self.encoders.append(encoder)
             self.in_channels = out_channels * PENetBottleneck.expansion
             block_idx += num_blocks
@@ -48,7 +50,8 @@ class PENet(nn.Module):
             self.classifier = GAPLinear(256, num_classes)
 
         # Decoders
-        decoder_config = [(0, 256, 256, 128), (512, 128, 128, 64), (256, 64, 64, 64), (64, 64, 64, 64)]
+        decoder_config = [(0, 256, 256, 128), (512, 128, 128, 64),
+                          (256, 64, 64, 64), (64, 64, 64, 64)]
         total_blocks = 2 * len(decoder_config)
         block_idx = total_blocks - 1
 
@@ -56,12 +59,14 @@ class PENet(nn.Module):
         for i, (skip_channels, in_channels, mid_channels, out_channels) in enumerate(decoder_config):
             is_last_decoder = (i == len(decoder_config) - 1)
             decoder = PENetDecoder(skip_channels, in_channels, mid_channels, out_channels,
-                                  kernel_size=(3, 4, 4) if is_last_decoder else 4,
-                                  stride=(1, 2, 2) if is_last_decoder else 2)
+                                   kernel_size=(
+                                       3, 4, 4) if is_last_decoder else 4,
+                                   stride=(1, 2, 2) if is_last_decoder else 2)
             self.decoders.append(decoder)
             block_idx -= 2
 
-        self.out_conv = nn.Conv3d(64, self.num_classes, kernel_size=3, padding=1)
+        self.out_conv = nn.Conv3d(
+            64, self.num_classes, kernel_size=3, padding=1)
 
         if init_method is not None:
             self._initialize_weights(init_method, focal_pi=0.01)
@@ -77,16 +82,19 @@ class PENet(nn.Module):
                 elif init_method == 'kaiming':
                     nn.init.kaiming_normal_(m.weight)
                 else:
-                    raise NotImplementedError('Invalid initialization method: {}'.format(self.init_method))
+                    raise NotImplementedError(
+                        'Invalid initialization method: {}'.format(self.init_method))
                 if hasattr(m, 'bias') and m.bias is not None:
                     if focal_pi is not None and hasattr(m, 'is_output_head') and m.is_output_head:
                         # Focal loss prior (~0.01 prob for positive, see RetinaNet Section 4.1)
-                        nn.init.constant_(m.bias, -math.log((1 - focal_pi) / focal_pi))
+                        nn.init.constant_(
+                            m.bias, -math.log((1 - focal_pi) / focal_pi))
                     else:
                         nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.GroupNorm) and m.affine:
                 # Gamma for last GroupNorm in each residual block gets set to 0
-                init_gamma = 0 if hasattr(m, 'is_last_norm') and m.is_last_norm else 1
+                init_gamma = 0 if hasattr(
+                    m, 'is_last_norm') and m.is_last_norm else 1
                 nn.init.constant_(m.weight, init_gamma)
                 nn.init.constant_(m.bias, 0)
 
@@ -134,12 +142,15 @@ class PENet(nn.Module):
             https://discuss.pytorch.org/t/how-to-load-part-of-pre-trained-model/1113/2
         """
         device = 'cuda:{}'.format(gpu_ids[0]) if len(gpu_ids) > 0 else 'cpu'
-        pretrained_dict = torch.load(ckpt_path, map_location=device)['model_state']
+        pretrained_dict = torch.load(ckpt_path, map_location=device)[
+            'model_state']
         model_dict = self.state_dict()
 
         # Filter out unnecessary keys
-        pretrained_dict = {k[len('module.'):]: v for k, v in pretrained_dict.items()}
-        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+        pretrained_dict = {k[len('module.'):]: v for k,
+                           v in pretrained_dict.items()}
+        pretrained_dict = {k: v for k,
+                           v in pretrained_dict.items() if k in model_dict}
 
         # Overwrite entries in the existing state dict
         model_dict.update(pretrained_dict)
