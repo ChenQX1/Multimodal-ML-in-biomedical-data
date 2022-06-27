@@ -84,14 +84,12 @@ class PENetClassifier(nn.Module):
         # Expand input (allows pre-training on RGB videos, fine-tuning on Hounsfield Units)
         if x.size(1) < self.num_channels:
             x = x.expand(-1, self.num_channels // x.size(1), -1, -1, -1)
-
         x = self.in_conv(x)
         x = self.max_pool(x)
 
         # Encoders
         for encoder in self.encoders:
             x = encoder(x)
-
         # Classifier
         x = self.classifier(x)
 

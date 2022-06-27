@@ -1,3 +1,4 @@
+from statistics import mode
 import numpy as np
 import random
 import sklearn.metrics as sk_metrics
@@ -55,6 +56,7 @@ class ModelEvaluator(object):
             # Evaluate on the training and validation sets
             model.eval()
             for data_loader in self.data_loaders:
+                print()
                 phase_metrics, phase_curves = self._eval_phase(model, data_loader, data_loader.phase, device)
                 metrics.update(phase_metrics)
                 curves.update(phase_curves)
@@ -90,12 +92,10 @@ class ModelEvaluator(object):
             for inputs, targets_dict in data_loader:
                 if num_evaluated >= num_examples:
                     break
-
                 with torch.no_grad():
                     cls_logits = model.forward(inputs.to(device))
                     cls_targets = targets_dict['is_abnormal']
                     loss = self.cls_loss_fn(cls_logits, cls_targets.to(device))
-
                 self._record_batch(cls_logits, targets_dict['series_idx'], loss, **records)
 
                 if start_visual <= num_evaluated and num_visualized < self.num_visuals and phase != 'train':

@@ -103,8 +103,10 @@ class PENet(nn.Module):
         # Expand input (allows pre-training on RGB videos, fine-tuning on Hounsfield Units)
         if x.size(1) < self.num_channels:
             x = x.expand(-1, self.num_channels // x.size(1), -1, -1, -1)
+        print(f'After expanding: {x.shape}')
 
         x = self.in_conv(x)
+        print(f'After first conv: {x.shape}')
 
         # Encoders
         x_skips = []
@@ -113,24 +115,29 @@ class PENet(nn.Module):
             if i == 0:
                 x = self.max_pool(x)
             x = encoder(x)
+        print(f'After encoders: {x.shape}')
 
         # ASPP layer
         x = self.asp_pool(x)
+        print(f'After ASPP: {x.shape}')
 
         # Classify
         cls = None
         if self.do_classify:
             cls = self.classifier(x)
-
+        print(f'After classifier, the shape of cls: {cls.shape}')
+        
         # Segment
         x_skip = None
         for decoder in self.decoders:
             x = decoder(x, x_skip)
             if x_skips:
                 x_skip = x_skips.pop()
+        print(f'After decoders: {x.shape}')
 
         x = self.out_conv(x)
         seg = x.squeeze(dim=1)
+        print(f'After out_conv: {x.shape}')
 
         return cls, seg
 

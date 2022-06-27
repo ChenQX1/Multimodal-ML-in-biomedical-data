@@ -11,7 +11,7 @@ from .base_ct_dataset import BaseCTDataset
 from ct.ct_pe_constants import *
 from scipy.ndimage.interpolation import rotate
 
-
+# parse 'pe' to 'CTPEDataset3d' in BaseArgParser
 class CTPEDataset3d(BaseCTDataset):
     def __init__(self, args, phase, is_training_set=True):
         """
@@ -108,7 +108,6 @@ class CTPEDataset3d(BaseCTDataset):
             ctpe = self.ctpe_list[ctpe_idx]
         else:
             # Get sequential windows through the whole series
-            # TODO
             start_idx = (idx - self.series_to_window_idx[ctpe_idx]) * self.num_slices
 
         if self.do_jitter:
