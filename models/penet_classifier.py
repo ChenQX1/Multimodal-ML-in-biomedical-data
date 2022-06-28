@@ -80,7 +80,6 @@ class PENetClassifier(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
-
         # Expand input (allows pre-training on RGB videos, fine-tuning on Hounsfield Units)
         if x.size(1) < self.num_channels:
             x = x.expand(-1, self.num_channels // x.size(1), -1, -1, -1)

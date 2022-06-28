@@ -51,7 +51,7 @@ def train(args):
         iter_n = 0
         for inputs, target_dict in train_loader:
             logger.start_iter()
-
+            print(f' ==== data id ==== \n {target_dict["study_num"]}')
             with torch.set_grad_enabled(True):
                 inputs.to(args.device)
                 cls_logits = model.forward(inputs)

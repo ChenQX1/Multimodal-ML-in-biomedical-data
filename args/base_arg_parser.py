@@ -13,7 +13,7 @@ class BaseArgParser(object):
     """Base argument parser for args shared between test and train modes."""
     def __init__(self):
         self.parser = argparse.ArgumentParser(description='PENet base args')
-        self.parser.add_argument('--model', type=str, choices=('PENet', 'PENetClassifier'), default='PENet',
+        self.parser.add_argument('--model', type=str, choices=('PENet', 'PENetClassifier', 'PEElasticNet'), default='PENet',
                                  help='Model to use. PENetClassifier or PENet.')
         self.parser.add_argument('--batch_size', type=int, default=6, help='Batch size.')
         self.parser.add_argument('--ckpt_path', type=str, default='',
@@ -133,7 +133,7 @@ class BaseArgParser(object):
             args.dataset = 'CTPEDataset3d'
 
         if self.is_training and args.use_pretrained:
-            if args.model != 'PENet' and args.model != 'PENetClassifier':
+            if args.model != 'PENet' and args.model != 'PENetClassifier' and args.model != 'PEElasticNet':
                 raise ValueError('Pre-training only supported for PENet/PENetClassifier loading PENetClassifier.')
             if not args.ckpt_path:
                 raise ValueError('Must specify a checkpoint path for pre-trained model.')
