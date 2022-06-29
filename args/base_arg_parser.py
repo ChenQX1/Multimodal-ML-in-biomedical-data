@@ -143,7 +143,7 @@ class BaseArgParser(object):
             if args.model_depth != 50:
                 raise ValueError('Invalid model depth for PENet: {}'.format(args.model_depth))
             args.loader = 'window'
-        elif args.model == 'PENetClassifier':
+        elif args.model == 'PENetClassifier' or args.model == 'PEElasticNet':
             if args.model_depth != 50:
                 raise ValueError('Invalid model depth for PENet: {}'.format(args.model_depth))
             args.loader = 'window'

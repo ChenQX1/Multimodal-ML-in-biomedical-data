@@ -7,6 +7,7 @@ import torch.nn as nn
 
 class ModelSaver(object):
     """Class to save and load model ckpts."""
+
     def __init__(self, save_dir, epochs_per_save, max_ckpts, metric_name='val_loss', maximize_metric=False):
         """
         Args:
@@ -68,7 +69,8 @@ class ModelSaver(object):
             }
         model.to(device)
 
-        ckpt_path = os.path.join(self.save_dir, 'epoch_{}.pth.tar'.format(epoch))
+        ckpt_path = os.path.join(
+            self.save_dir, 'epoch_{}.pth.tar'.format(epoch))
         torch.save(ckpt_dict, ckpt_path)
 
         if self._is_best(metric_val):

@@ -5,7 +5,6 @@ import util
 
 from models.layers.penet import *
 
-
 class PENetClassifier(nn.Module):
     """PENet stripped down for classification.
 
@@ -130,10 +129,12 @@ class PENetClassifier(nn.Module):
             pretrained_dict[new] = pretrained_dict.pop(old)
         ###############################################################################
         # Filter out unnecessary keys
-        pretrained_dict = {k[len('module.'):]: v for k,
-                           v in pretrained_dict.items()}
-        pretrained_dict = {k: v for k,
-                           v in pretrained_dict.items() if k in model_dict}
+        pretrained_dict = {
+            k[len('module.'):]: v for k, v in pretrained_dict.items()
+        }
+        pretrained_dict = {
+            k: v for k, v in pretrained_dict.items() if k in model_dict
+        }
 
         # Overwrite entries in the existing state dict
         model_dict.update(pretrained_dict)
