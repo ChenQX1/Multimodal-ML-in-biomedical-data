@@ -125,19 +125,18 @@ def train(args):
     # # Train Elastic Net
     # # TODO: Refactor this code block
     elasticnet_ckpt_dir = './ckpts/elastic.pth'
-    # ehr_train = EHRDataset(args, phase='train')
-    # ehr_val = EHRDataset(args, phase='val')
-    # ehr_loader_train = DataLoader(
-    #     ehr_train, 16, sampler=ehr_train.ehr_data.index.values)
-    # ehr_loader_val = DataLoader(
-    #     ehr_val, 32, sampler=ehr_val.ehr_data.index.values)
-    # model_ehr = ElasticNet()
-    # cls_loss_fn_ehr = nn.BCELoss(reduction='mean')
-    # optimizer_ehr = torch.optim.Adam(model_ehr.parameters())
-    # model_ehr = train_elasticnet(
-    #     model_ehr, ehr_loader_train, ehr_loader_val, optimizer_ehr, cls_loss_fn_ehr, 200, args.device)
-    # torch.save(model_ehr.state_dict(), elasticnet_ckpt_dir)
-
+    ehr_train = EHRDataset(args, phase='train')
+    ehr_val = EHRDataset(args, phase='val')
+    ehr_loader_train = DataLoader(
+        ehr_train, 16, sampler=ehr_train.ehr_data.index.values)
+    ehr_loader_val = DataLoader(
+        ehr_val, 32, sampler=ehr_val.ehr_data.index.values)
+    model_ehr = ElasticNet()
+    cls_loss_fn_ehr = nn.BCELoss(reduction='mean')
+    optimizer_ehr = torch.optim.Adam(model_ehr.parameters())
+    model_ehr = train_elasticnet(
+        model_ehr, ehr_loader_train, ehr_loader_val, optimizer_ehr, cls_loss_fn_ehr, 200, args.device)
+    torch.save(model_ehr.state_dict(), elasticnet_ckpt_dir)
 
     # Prepare for joint training
     # TODO: Refactor this code block
@@ -171,17 +170,6 @@ def train(args):
 
                 fit(img_input, img_label, ehr_input, ehr_label,
                     model_list, loss_fns, optims, logger, target_dict)
-
-                # cls_logits = model_img.forward(img_input)
-                # cls_targets = target_dict['is_abnormal']
-                # cls_loss = cls_loss_fn_img(
-                #     cls_logits, cls_targets.to(args.device))
-                # loss = cls_loss.mean()
-                # logger.log_iter(img_input, cls_logits, target_dict,
-                #                 cls_loss.mean(), optimizer_img)
-                # optimizer_img.zero_grad()
-                # loss.backward()
-                # optimizer_img.step()
 
             logger.end_iter()
             util.step_scheduler(lr_scheduler, global_step=logger.global_step)
