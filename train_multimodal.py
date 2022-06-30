@@ -22,8 +22,7 @@ def fit(img_input, img_label, ehr_input, ehr_label, model_list, loss_fns, optims
     logits_img = penet(img_input)
     # Joint Training
     if isinstance(penet.module, PEElasticNet):
-        assert len(optims) == len(
-            loss_fns) == 1, 'Joint training needs one loss function.'
+        assert len(loss_fns) == 1, 'Joint training needs one loss function.'
         loss_fn = loss_fns[0]
         logits_joint = elasticnet(logits_img + ehr_input)
         cls_loss = loss_fn(logits_joint, ehr_label)
@@ -32,8 +31,10 @@ def fit(img_input, img_label, ehr_input, ehr_label, model_list, loss_fns, optims
         logger.log_iter(img_input, logits_joint, target_dict, loss, optims[0])
 
         optims[0].zero_grad()
+        optims[1].zero_grad()
         loss.backward()
         optims[0].step()
+        optims[1].step()
     # Post fusion
     else:
         logits_ehr = elasticnet(ehr_input)
@@ -150,7 +151,7 @@ def train(args):
     model_list = [model_img, model_ehr]
     if isinstance(model_img.module, PEElasticNet):  # joint training
         loss_fns = [cls_loss_fn_ehr]
-        optims = [optimizer_ehr]
+        optims = [optimizer_img, optimizer_ehr]
     else:   # post fusion
         loss_fns = [cls_loss_fn_img, cls_loss_fn_ehr]
         optims = [optimizer_img, optimizer_ehr]
