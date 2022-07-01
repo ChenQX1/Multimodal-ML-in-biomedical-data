@@ -1,3 +1,4 @@
+from typing import Dict
 import util
 
 from time import time

@@ -1,5 +1,3 @@
-import enum
-from cv2 import mean
 import data_loader
 import models
 import torch
@@ -132,7 +130,7 @@ def train(args):
         ehr_train, 16, sampler=ehr_train.ehr_data.index.values)
     ehr_loader_val = DataLoader(
         ehr_val, 32, sampler=ehr_val.ehr_data.index.values)
-    model_ehr = ElasticNet()
+    model_ehr = ElasticNet(in_feats=ehr_train.ehr_data.shape[1], out_feats=1)
     cls_loss_fn_ehr = nn.BCELoss(reduction='mean')
     optimizer_ehr = torch.optim.Adam(model_ehr.parameters())
     model_ehr = train_elasticnet(

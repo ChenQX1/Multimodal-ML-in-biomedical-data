@@ -37,7 +37,7 @@ class ModelEvaluator(object):
         self.num_visuals = num_visuals
         self.max_eval = None if max_eval is None or max_eval < 0 else max_eval
 
-    def evaluate(self, model, device, epoch=None):
+    def evaluate(self, model, device, epoch: int = None):
         """Evaluate a model at the end of the given epoch.
 
         Args:
