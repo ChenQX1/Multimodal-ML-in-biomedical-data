@@ -5,6 +5,7 @@ import util
 
 from models.layers.penet import *
 
+
 class PENetClassifier(nn.Module):
     """PENet stripped down for classification.
 

@@ -1,3 +1,8 @@
+from typing import Dict
+
+from matplotlib.pyplot import ylabel
+from sklearn.metrics import precision_score
+from args.cfg_parser import CfgParser
 import data_loader
 import models
 import torch
@@ -5,6 +10,9 @@ import torch.nn as nn
 import util
 from torch.utils.data import DataLoader
 import numpy as np
+import argparse
+import yaml
+import pprint
 
 
 from args import TrainArgParser
@@ -84,6 +92,7 @@ def train_elasticnet(net, train_loader, val_loader, optimizer, loss_fn, n_epoch,
 
 
 def train(args):
+    # Get the model
     if args.ckpt_path and not args.use_pretrained:
         model_img, ckpt_info = ModelSaver.load_model(
             args.ckpt_path, args.gpu_ids)
@@ -130,7 +139,7 @@ def train(args):
         ehr_train, 16, sampler=ehr_train.ehr_data.index.values)
     ehr_loader_val = DataLoader(
         ehr_val, 32, sampler=ehr_val.ehr_data.index.values)
-    model_ehr = ElasticNet(in_feats=ehr_train.ehr_data.shape[1], out_feats=1)
+    model_ehr = ElasticNet(in_feats=ehr_train.ehr_data.shape[1], out_feats=args.num_classes)
     cls_loss_fn_ehr = nn.BCELoss(reduction='mean')
     optimizer_ehr = torch.optim.Adam(model_ehr.parameters())
     model_ehr = train_elasticnet(
@@ -139,7 +148,7 @@ def train(args):
 
     # Prepare for joint training
     # TODO: Refactor this code block
-    model_ehr = ElasticNet()
+    model_ehr = ElasticNet(in_feats=ehr_train.ehr_data.shape[1], out_feats=args.num_classes)
     model_ehr.load_state_dict(torch.load(elasticnet_ckpt_dir))
     model_ehr = nn.DataParallel(model_ehr, args.gpu_ids)
     optimizer_ehr = torch.optim.Adam(model_ehr.parameters())
@@ -184,6 +193,17 @@ def train(args):
 
 if __name__ == '__main__':
     util.set_spawn_enabled()
-    parser = TrainArgParser()
-    args_ = parser.parse_args()
-    train(args_)
+    # parser = TrainArgParser()
+    # args_ = parser.parse_args()
+
+    parser = CfgParser()
+
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument('--cfg_file', type=str, default='base_cfg')
+    # args_ = parser.parse_args()
+    # with open(f'./cfgs/{args_.cfg_file}.yaml', 'r') as fd:
+    #     cfg_data: Dict = yaml.safe_load(fd)
+    # pprint.pprint(cfg_data)
+
+    # train(args_)
+
