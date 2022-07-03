@@ -75,7 +75,7 @@ class CfgParser(object):
 
         # Set up available GPUs
         # args.gpu_ids = util.args_to_list(args.gpu_ids, allow_empty=True, arg_type=int, allow_negative=False)
-        if args.gpu_ids == -1: args.gpu_ids = []
+        args.gpu_ids = [] if args.gpu_ids == -1 else args.gpu_ids
         if len(args.gpu_ids) > 0 and torch.cuda.is_available():
             # Set default GPU for `tensor.to('cuda')`
             torch.cuda.set_device(args.gpu_ids[0])

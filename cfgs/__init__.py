@@ -1,2 +1,2 @@
-from . import train_cfg
-from . import test_cfg
+from .templates import train_cfg
+from .templates import test_cfg
