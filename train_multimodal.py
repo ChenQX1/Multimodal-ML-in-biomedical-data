@@ -195,15 +195,11 @@ if __name__ == '__main__':
     util.set_spawn_enabled()
     # parser = TrainArgParser()
     # args_ = parser.parse_args()
+    # train(args_)
 
     parser = CfgParser()
 
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('--cfg_file', type=str, default='base_cfg')
-    # args_ = parser.parse_args()
-    # with open(f'./cfgs/{args_.cfg_file}.yaml', 'r') as fd:
-    #     cfg_data: Dict = yaml.safe_load(fd)
-    # pprint.pprint(cfg_data)
+    train(parser.img_modal)
 
-    # train(args_)
+    
 

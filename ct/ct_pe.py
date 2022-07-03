@@ -2,7 +2,7 @@
 class CTPE(object):
     """CT for Pulmonary Embolism."""
 
-    def __init__(self, study_num, slice_thickness, pe_slice_nums, num_slices, \
+    def __init__(self, study_num, slice_thickness, pe_slice_nums, num_slices,
                  dataset, is_positive, phase=None, age=None, is_smoker=None, race=None, gender=None):
         self.study_num = study_num
         self.slice_thickness = float(slice_thickness)

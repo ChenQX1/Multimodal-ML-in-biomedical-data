@@ -80,7 +80,6 @@ class BaseArgParser(object):
 
     def parse_args(self):
         args = self.parser.parse_args()
-
         # Save args to a JSON file
         date_string = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         save_dir = os.path.join(args.save_dir, '{}_{}'.format(args.name, date_string))
