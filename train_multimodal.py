@@ -1,7 +1,3 @@
-from typing import Dict
-
-from matplotlib.pyplot import ylabel
-from sklearn.metrics import precision_score
 from args.cfg_parser import CfgParser
 import data_loader
 import models
@@ -10,10 +6,7 @@ import torch.nn as nn
 import util
 from torch.utils.data import DataLoader
 import numpy as np
-import argparse
-import yaml
 import pprint
-
 
 from args import TrainArgParser
 from evaluator import ModelEvaluator
