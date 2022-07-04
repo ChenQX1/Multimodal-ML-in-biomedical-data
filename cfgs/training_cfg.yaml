@@ -13,10 +13,11 @@ multimodal:
     data_dir: data
     dataset: pe
     ckpt_path: ckpts/xnet_kin_90.pth.tar
-    save_dir: train_logs
+    use_pretrained: True
 
     cudnn_benchmark: False
     gpu_ids: -1
+    # preprocessing
     abnormal_prob: 0.3
     include_normals: True
     agg_method: max
@@ -24,17 +25,20 @@ multimodal:
     crop_shape: [192, 192]
     resize_shape: [208, 208]
     num_workers: 8
-    
+    # model definition    
     model_depth: 50
     num_classes: 1
     num_epochs: 1
     num_slices: 24
     num_visual: 8
     batch_size: 8
+
     optimizer: sgd
-    sgd_dampening: 0.9
-    sgd_momentum: 0.9
     learning_rate: 0.01
+    sgd_momentum: 0.9
+    sgd_dampening: 0.9
+    weight_decay: 0.001
+
     lr_decay_step: 600000
     lr_scheduler: cosine_warmup
     lr_warmup_steps: 10000
@@ -42,18 +46,36 @@ multimodal:
     epochs_per_save: 1
     iters_per_print: 8
     iters_per_visual: 8000
-
+    # post processing
     fine_tune: True
     fine_tuning_boundary: calssifier
     fine_tuning_lr: 0.01
 
     pe_types: [central, segmental]
     use_hem: False
-    use_pretrained: True
-    weight_decay: 0.001
+    
     do_classify: True
 
-  PEElasticNet:
+  EHR:
+    model: ElasticNet
+    data_dir: data
+    dataset: all_ehr
+    ckpt_path: ckpts/elastic.pth
+    use_pretrained: False
+
+    gpu_ids: -1
+    num_classes: 1
+    num_epochs: 10
+    batch_size: 16
+
+    optimizer: sgd
+    learning_rate: 0.01
+    sgd_momentum: 0.9
+    sgd_dampening: 0.9
+    weight_decay: 0.001
+
+    l1_lambda: 0.1
+
 
 log:
   save_dir: logs

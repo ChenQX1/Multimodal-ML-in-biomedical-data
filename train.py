@@ -48,10 +48,9 @@ def train(args):
     while not logger.is_finished_training():
         logger.start_epoch()
 
-        iter_n = 0
         for inputs, target_dict in train_loader:
             logger.start_iter()
-            print(f' ==== data id ==== \n {target_dict["study_num"]}')
+            # print(f' ==== data id ==== \n {target_dict["study_num"]}')
             with torch.set_grad_enabled(True):
                 inputs.to(args.device)
                 cls_logits = model.forward(inputs)
@@ -67,10 +66,7 @@ def train(args):
 
             logger.end_iter()
             util.step_scheduler(lr_scheduler, global_step=logger.global_step)
-            # TODO: remove
-            iter_n += 1
-            if iter_n > 1:
-                break
+
         metrics, curves = evaluator.evaluate(model, args.device, logger.epoch)
         saver.save(logger.epoch, model, optimizer, lr_scheduler, args.device,
                    metric_val=metrics.get(args.best_ckpt_metric, None))
