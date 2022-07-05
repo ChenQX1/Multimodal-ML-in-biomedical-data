@@ -73,7 +73,7 @@ multimodal:
     gpu_ids: -1
     num_classes: 1
     num_epochs: 10
-    batch_size: 16
+    batch_size: 2
 
     optimizer: sgd
     learning_rate: 0.01

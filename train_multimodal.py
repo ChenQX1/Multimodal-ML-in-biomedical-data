@@ -62,7 +62,6 @@ def fit_multimodal(parser):
                     cls_loss_fn_penet, optimizer_penet, lr_scheduler_penet, evaluator, saver)
 
     ehr_modal = parser.ehr_modal
-    # ElasticNet
     dt_train_ehr = EHRDataset(ehr_modal, phase='train')
     dt_val_ehr = EHRDataset(ehr_modal, phase='val')
     loader_train_ehr = DataLoader(
@@ -93,8 +92,8 @@ def fit_multimodal(parser):
                     ehr_input, ehr_target = dt_train_ehr[target_dict['study_num']]
                     ehr_input, ehr_target = ehr_input.to(
                         device), ehr_target.to(device)
-                    img_feat = model_penet.module.forward_feature(img_input)   # !!
-                    print(f'===== img feat shape: {img_feat.shape}')
+                    img_feat = model_penet.module.forward_feature(img_input, intermediate_n=dt_train_ehr.ehr_data.shape[1])   # !!
+                    # print(f'===== img feat shape: {img_feat.shape}')
 
                     joint_input = img_feat + ehr_input
                     joint_logits = model_elastic_net(joint_input)
@@ -157,10 +156,6 @@ def train_penet(args, logger, loader_train, model, loss_fn, optimizer, lr_schedu
             logger.start_iter()
             with torch.set_grad_enabled(True):
                 inputs = inputs.to(args.device)
-                # img_label = target_dict['is_abnormal'].to(args.device)
-                # ehr_input, ehr_label = ehr_train[target_dict['study_num']]
-                # ehr_input, ehr_label = ehr_input.to(
-                #     args.device), ehr_label.to(args.device)
                 cls_logits = model(inputs)
                 cls_target = target_dict['is_abnormal'].to(args.device)
                 cls_loss = loss_fn(cls_logits, cls_target)
@@ -188,4 +183,5 @@ if __name__ == '__main__':
     util.set_spawn_enabled()
 
     parser = CfgParser()
+    ehr_dataset = EHRDataset(parser.ehr_modal, phase='train')
     fit_multimodal(parser)

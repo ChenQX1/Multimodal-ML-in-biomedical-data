@@ -5,6 +5,7 @@ from models.penet_classifier import PENetClassifier
 class ElasticNet(nn.Module):
     def __init__(self, in_feats: int, out_feats: int = 1) -> None:
         super(ElasticNet, self).__init__()
+        self.normlizer = nn.BatchNorm1d(in_feats)
         self.output_layer = nn.Sequential(
             nn.Linear(in_feats, in_feats * 2, bias=True),
             nn.LeakyReLU(),
@@ -13,7 +14,10 @@ class ElasticNet(nn.Module):
         )
 
     def forward(self, x):
-        return self.output_layer(x)
+        x = self.normlizer(x)
+        x = self.output_layer(x)
+
+        return x
 
     def l1_reg(self):
         return self.output_layer[0].weight.abs().sum() + self.output_layer[2].weight.abs().sum()
