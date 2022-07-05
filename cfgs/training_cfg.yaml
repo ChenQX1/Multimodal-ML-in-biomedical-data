@@ -69,6 +69,7 @@ multimodal:
     use_pretrained: False
     rand_seed: 42
 
+    cudnn_benchmark: False
     gpu_ids: -1
     num_classes: 1
     num_epochs: 10
