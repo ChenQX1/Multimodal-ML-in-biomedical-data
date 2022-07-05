@@ -23,9 +23,6 @@ def sample_data(data_root, sample_data_dir):
     with open(os.path.join(sample_data_dir, 'series_list.pkl'), 'wb') as fd:
         pickle.dump(sereis_list_smaple, fd)
 
-    # np.save(os.path.join(sample_data_dir, 'train_idx.npy'), np.array(train_idx))
-    # np.save(os.path.join(sample_data_dir, 'test_idx.npy'), np.array(test_idx))
-
     tables = ['Demographics.csv', 'ICD.csv', 'INP_MED.csv', 'Labels.csv', 'LABS.csv', 'OUT_MED.csv']
     idx2map = dict(zip(
         x['idx'].values,
@@ -44,6 +41,8 @@ def sample_data(data_root, sample_data_dir):
             os.path.join(data_root, f'{img_name}.npy'),
             sample_data_dir
         )
+    np.save(os.path.join(sample_data_dir, 'train_idx.npy'), np.array(train_idx))
+    np.save(os.path.join(sample_data_dir, 'test_idx.npy'), np.array(test_idx))
 
 
 if __name__ == '__main__':
