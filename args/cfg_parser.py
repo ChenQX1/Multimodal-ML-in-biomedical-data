@@ -39,7 +39,7 @@ class CfgParser(object):
         self.save_dir = self.cfg_data['log']['save_dir']
         self.train_img = self.cfg_data['train_img']
         self.train_ehr = self.cfg_data['train_ehr']
-        self.joint_merge = self.cfg_data['joint_merge']
+        self.joint_training = self.cfg_data['joint_training']
         self.num_epochs = self.cfg_data['num_epochs']
 
         self.img_modal = self._parse_img_modal_cfg(self.img_modal)
@@ -56,22 +56,15 @@ class CfgParser(object):
             json.dump(vars(self.ehr_modal), fd, indent=4, sort_keys=True)
     
 
-
     def _parse_img_modal_cfg(self, args):
+        args.rand_seed = self.cfg_data['rand_seed']
+        args.gpu_ids = self.cfg_data['gpu_ids']
+        args.cudnn_benchmark = self.cfg_data['cudnn_benchmark']
         [setattr(args, k, v)
          for k, v in self.cfg_data['multimodal']['image'].items()]
         args.name = self.cfg_data['name']
         args.data_dir = self.cfg_data['dataset']['data_dir']
         args.save_dir = self.cfg_data['log']['save_dir']
-
-        # date_string = datetime.datetime.now() .strftime("%Y%m%d_%H%M%S")
-        # save_dir = '/'.join([self.img_modal.save_dir, f'{self.name}_{date_string}'])
-        # os.makedirs(save_dir, exist_ok=True)
-        # with open('/'.join([save_dir, 'args.json']), 'w') as fd:
-        #     json.dump(vars(self.img_modal), fd, indent=4, sort_keys=True)
-        #     fd.write('\n')
-        #     json.dump(vars(self.elastic_net_cfg), fd, indent=4, sort_keys=True)
-        #     fd.write('\n')
 
         args.start_epoch = 1  # Gets updated if we load a checkpoint
         if not args.is_training and not args.ckpt_path and not (hasattr(args, 'test_2d') and args.test_2d):
@@ -144,6 +137,9 @@ class CfgParser(object):
         return args
 
     def _parse_ehr_modal_cfg(self, args):
+        args.rand_seed = self.cfg_data['rand_seed']
+        args.gpu_ids = self.cfg_data['gpu_ids']
+        args.cudnn_benchmark = self.cfg_data['cudnn_benchmark']
         [setattr(args, k, v)
          for k, v in self.cfg_data['multimodal']['EHR'].items()]
         args.name = self.cfg_data['name']

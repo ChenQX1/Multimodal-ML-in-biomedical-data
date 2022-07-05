@@ -8,20 +8,20 @@ dataset:
 mode: train # train, test
 train_img: False
 train_ehr: True
-joint_merge: True
+joint_training: True
 num_epochs: 2
+gpu_ids: 0
+cudnn_benchmark: False
+rand_seed: 42
+
 
 multimodal:
   image:
     model: PEElasticNet
-    data_dir: data
     dataset: pe
     ckpt_path: ckpts/xnet_kin_90.pth.tar
     use_pretrained: True
-    rand_seed: 42
 
-    cudnn_benchmark: False
-    gpu_ids: -1 # set -1 for cpu, or [0,1,3] for gpu ids
     # preprocessing
     abnormal_prob: 0.3
     include_normals: True
@@ -63,14 +63,10 @@ multimodal:
 
   EHR:
     model: ElasticNet
-    data_dir: data
     dataset: all_ehr
     ckpt_path: ckpts/elastic.pth
     use_pretrained: False
-    rand_seed: 42
 
-    cudnn_benchmark: False
-    gpu_ids: -1
     num_classes: 1
     num_epochs: 10
     batch_size: 2

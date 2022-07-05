@@ -31,7 +31,6 @@ def fit_multimodal(parser):
         model_penet = nn.DataParallel(model_penet, img_modal.gpu_ids)
     model_penet = model_penet.to(img_modal.device)
     model_penet.train()
-
     # Get optimizer and scheduler
     if img_modal.use_pretrained or img_modal.fine_tune:
         parameters = model_penet.module.fine_tuning_parameters(
@@ -43,7 +42,6 @@ def fit_multimodal(parser):
     if img_modal.ckpt_path and not img_modal.use_pretrained and not img_modal.fine_tune:
         ModelSaver.load_optimizer(
             img_modal.ckpt_path, optimizer_penet, lr_scheduler_penet)
-
     # Get logger, evaluator, saver
     cls_loss_fn_penet = util.get_loss_fn(
         is_classification=True, dataset=img_modal.dataset, size_average=False)
@@ -79,7 +77,7 @@ def fit_multimodal(parser):
                           model_elastic_net, optimizer_ehr, cls_loss_fn_ehr)
 
     device = img_modal.device
-    if parser.joint_merge:
+    if parser.joint_training:
         joint_loss = nn.BCELoss(reduction='mean')
         connector_linear = nn.Linear(2048*2*6*6, dt_train_ehr.ehr_data.shape[1]).to(device)
         loss_log_train = []
@@ -112,7 +110,6 @@ def fit_multimodal(parser):
             print(
                 f'=========== Epoch {i} ============\n    training loss: {loss_mean}')
             loss_log_train.append(loss_mean)
-
     else:
         pass
 

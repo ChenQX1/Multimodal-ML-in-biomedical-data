@@ -7,9 +7,9 @@ class ElasticNet(nn.Module):
         super(ElasticNet, self).__init__()
         self.normalizer = nn.BatchNorm1d(in_feats)
         self.output_layer = nn.Sequential(
-            nn.Linear(in_feats, in_feats * 2, bias=True),
+            nn.Linear(in_feats, in_feats, bias=True),
             nn.LeakyReLU(),
-            nn.Linear(in_feats * 2, out_feats, bias=True),
+            nn.Linear(in_feats, out_feats, bias=True),
             nn.Sigmoid()
         )
 
