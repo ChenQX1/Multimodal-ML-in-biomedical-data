@@ -1,6 +1,6 @@
 
 # class XCfg is a template
-# all cfg parsing should be processed in `CfgParser`
+# all necessary cfg parsing should be processed in `CfgParser`
 class BasicPENetCfg(object):
     def __init__(self, **kwargs) -> None:
         self.name = None  # required
@@ -29,7 +29,7 @@ class BasicPENetCfg(object):
         self.min_abnormal_slices = 4
 
         self.model = 'PENet'
-        self.ckpt_path = ''
+        self.ckpt_path = None
         self.num_channels = 3
         self.num_classes = 1
         self.num_slices = 32
@@ -45,5 +45,16 @@ class BasicPENetCfg(object):
         self.eval_mode = 'series'
         self.do_classify = False
         self.num_visuals = 4
-        self.save_dir = 'ckpts'
-    
+        self.save_dir = None
+ 
+
+class BasicEHRCfg(object):
+    def __init__(self) -> None:
+        self.is_training = None
+        self.data_dir = None
+        self.dataset = None
+        self.ckpt_path = None
+
+        self.gpu_ids = -1
+        self.num_classes = 1
+        self.batch_size = 16

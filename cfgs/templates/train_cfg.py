@@ -1,4 +1,4 @@
-from .base_cfg import BasicPENetCfg
+from .base_cfg import BasicEHRCfg, BasicPENetCfg
 
 
 class PENetCfg(BasicPENetCfg):
@@ -27,7 +27,7 @@ class PENetCfg(BasicPENetCfg):
         self.adam_beta_1 = 0.9
         self.adam_beta_2 = 0.999
         self.dropout_prob = 0
-        
+
         self.hidden_dim = 32
         self.elastic_transform = False
         self.do_hflip = True
@@ -42,3 +42,25 @@ class PENetCfg(BasicPENetCfg):
         self.fine_tune = True
         self.fine_tuning_lr = 0
         self.fine_tuning_boundary = 'encoder.3'
+
+
+class EHRCfg(BasicEHRCfg):
+    def __init__(self, **kwargs) -> None:
+        super(EHRCfg, self).__init__(**kwargs)
+        
+        self.is_training = True
+        self.use_pretrained = False
+        self.num_epochs = 1
+
+        self.optimizer = 'sgd'
+        self.learning_rate = 0.01
+        # SGD
+        self.sgd_momentum = 0.9
+        self.sdg_dampening = 0.9
+        # Adam
+        self.adam_beta_1 = 0.9
+        self.adam_beta_2 = 0.999
+        # Regularization
+        self.dropout_prob = 0
+        self.l1_lambda = 0.1
+        self.weight_decay = 0.001

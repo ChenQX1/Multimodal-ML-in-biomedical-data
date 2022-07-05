@@ -1,4 +1,3 @@
-from imageio import save
 import cfgs
 
 import argparse
@@ -25,57 +24,73 @@ class CfgParser(object):
         args = self.parser.parse_args()
         with open(f'./cfgs/{args.cfg_file}.yaml', 'r') as fd:
             self.cfg_data: Dict = yaml.safe_load(fd)
-        # Set cfgs for image modal
-        mode = self.cfg_data['mode']
-        if mode == 'train':
+
+        self.mode = self.cfg_data['mode']
+        if self.mode == 'train':
             self.img_modal = cfgs.train_cfg.PENetCfg()
-        elif mode == 'test':
+            self.ehr_modal = cfgs.train_cfg.EHRCfg()
+        elif self.mode == 'test':
             self.img_modal = cfgs.test_cfg.PENetCfg()
+            self.ehr_modal = cfgs.test_cfg.EHRCfg()
         else:
             raise ValueError('The experiment mode must be "train" or "test" .')
-        
+
         self.name = self.cfg_data['name']
+        self.save_dir = self.cfg_data['log']['save_dir']
+        self.train_img = self.cfg_data['train_img']
+        self.train_ehr = self.cfg_data['train_ehr']
+        self.joint_merge = self.cfg_data['joint_merge']
+        self.num_epochs = self.cfg_data['num_epochs']
 
         self.img_modal = self._parse_img_modal_cfg(self.img_modal)
+        self.ehr_modal = self._parse_ehr_modal_cfg(self.ehr_modal)
+        self._save_cfgs()
 
-        # TODO: add cfg for elastic net
-        # self.elastic_net_cfg = None
-
-    # TODO: rename args to 'self.img_modal'
-    def _parse_img_modal_cfg(self, args):
-        [setattr(self.img_modal, k, v) for k, v in self.cfg_data['multimodal']['image'].items()]
-        self.img_modal.name = self.cfg_data['name']
-        self.img_modal.data_dir = self.cfg_data['dataset']['data_dir']
-        self.img_modal.save_dir = self.cfg_data['log']['save_dir']
-
+    def _save_cfgs(self):
         date_string = datetime.datetime.now() .strftime("%Y%m%d_%H%M%S")
-        save_dir = '/'.join([self.img_modal.save_dir, f'{self.name}_{date_string}'])
+        save_dir = '/'.join([self.save_dir, f'{self.name}_{date_string}'])
         os.makedirs(save_dir, exist_ok=True)
         with open('/'.join([save_dir, 'args.json']), 'w') as fd:
             json.dump(vars(self.img_modal), fd, indent=4, sort_keys=True)
             fd.write('\n')
-            # json.dump(vars(self.elastic_net_cfg), fd, indent=4, sort_keys=True)
-            fd.write('\n')
-        
+            json.dump(vars(self.ehr_modal), fd, indent=4, sort_keys=True)
+    
+
+
+    def _parse_img_modal_cfg(self, args):
+        [setattr(args, k, v)
+         for k, v in self.cfg_data['multimodal']['image'].items()]
+        args.name = self.cfg_data['name']
+        args.data_dir = self.cfg_data['dataset']['data_dir']
+        args.save_dir = self.cfg_data['log']['save_dir']
+
+        # date_string = datetime.datetime.now() .strftime("%Y%m%d_%H%M%S")
+        # save_dir = '/'.join([self.img_modal.save_dir, f'{self.name}_{date_string}'])
+        # os.makedirs(save_dir, exist_ok=True)
+        # with open('/'.join([save_dir, 'args.json']), 'w') as fd:
+        #     json.dump(vars(self.img_modal), fd, indent=4, sort_keys=True)
+        #     fd.write('\n')
+        #     json.dump(vars(self.elastic_net_cfg), fd, indent=4, sort_keys=True)
+        #     fd.write('\n')
+
         args.start_epoch = 1  # Gets updated if we load a checkpoint
         if not args.is_training and not args.ckpt_path and not (hasattr(args, 'test_2d') and args.test_2d):
             raise ValueError('Must specify --ckpt_path in test mode.')
         if args.is_training and args.epochs_per_save % args.epochs_per_eval != 0:
-            raise ValueError('epochs_per_save must be divisible by epochs_per_eval.')
+            raise ValueError(
+                'epochs_per_save must be divisible by epochs_per_eval.')
         if args.is_training:
             args.maximize_metric = not args.best_ckpt_metric.endswith('loss')
             if args.lr_scheduler == 'multi_step':
-                args.lr_milestones = util.args_to_list(args.lr_milestones, allow_empty=False)
+                args.lr_milestones = util.args_to_list(
+                    args.lr_milestones, allow_empty=False)
         if not args.pkl_path:
             args.pkl_path = os.path.join(args.data_dir, 'series_list.pkl')
 
-        # # Set up resize and crop
-        # args.resize_shape = util.args_to_list(args.resize_shape, allow_empty=False, arg_type=int, allow_negative=False)
-        # args.crop_shape = util.args_to_list(args.crop_shape, allow_empty=False, arg_type=int, allow_negative=False)
-
-        # Set up available GPUs
-        # args.gpu_ids = util.args_to_list(args.gpu_ids, allow_empty=True, arg_type=int, allow_negative=False)
-        args.gpu_ids = [] if args.gpu_ids == -1 else args.gpu_ids
+        if args.gpu_ids == -1:
+            args.gpu_ids = []
+        elif isinstance(args.gpu_ids, int):
+            args.gpu_ids = [args.gpu_ids]
         if len(args.gpu_ids) > 0 and torch.cuda.is_available():
             # Set default GPU for `tensor.to('cuda')`
             torch.cuda.set_device(args.gpu_ids[0])
@@ -86,10 +101,10 @@ class CfgParser(object):
             # args.device = 'mps'
 
         # Set random seed for a deterministic run
-        if args.deterministic:
-            torch.manual_seed(0)
-            np.random.seed(0)
-            random.seed(0)
+        if args.rand_seed:
+            torch.manual_seed(args.rand_seed)
+            np.random.seed(args.rand_seed)
+            random.seed(args.rand_seed)
             cudnn.deterministic = True
 
         # Map dataset name to a class
@@ -100,25 +115,60 @@ class CfgParser(object):
 
         if args.is_training and args.use_pretrained:
             if args.model != 'PENet' and args.model != 'PENetClassifier' and args.model != 'PEElasticNet':
-                raise ValueError('Pre-training only supported for PENet/PENetClassifier loading PENetClassifier.')
+                raise ValueError(
+                    'Pre-training only supported for PENet/PENetClassifier loading PENetClassifier.')
             if not args.ckpt_path:
-                raise ValueError('Must specify a checkpoint path for pre-trained model.')
+                raise ValueError(
+                    'Must specify a checkpoint path for pre-trained model.')
 
         args.data_loader = 'CTDataLoader'
         if args.model == 'PENet':
             if args.model_depth != 50:
-                raise ValueError('Invalid model depth for PENet: {}'.format(args.model_depth))
+                raise ValueError(
+                    'Invalid model depth for PENet: {}'.format(args.model_depth))
             args.loader = 'window'
         elif args.model == 'PENetClassifier' or args.model == 'PEElasticNet':
             if args.model_depth != 50:
-                raise ValueError('Invalid model depth for PENet: {}'.format(args.model_depth))
+                raise ValueError(
+                    'Invalid model depth for PENet: {}'.format(args.model_depth))
             args.loader = 'window'
             if args.dataset == 'KineticsDataset':
                 args.data_loader = 'KineticsDataLoader'
 
         # Set up output dir (test mode only)
         if not args.is_training:
-            args.results_dir = os.path.join(args.results_dir, '{}_{}'.format(args.name, date_string))
+            args.results_dir = os.path.join(
+                args.results_dir, '{}_{}'.format(args.name, date_string))
             os.makedirs(args.results_dir, exist_ok=True)
+
+        return args
+
+    def _parse_ehr_modal_cfg(self, args):
+        [setattr(args, k, v)
+         for k, v in self.cfg_data['multimodal']['EHR'].items()]
+        args.name = self.cfg_data['name']
+        args.data_dir = self.cfg_data['dataset']['data_dir']
+        args.save_dir = self.cfg_data['log']['save_dir']
+
+        if args.gpu_ids == -1:
+            args.gpu_ids = []
+        elif isinstance(args.gpu_ids, int):
+            args.gpu_ids = [args.gpu_ids]
+
+        if len(args.gpu_ids) > 0 and torch.cuda.is_available():
+            # Set default GPU for `tensor.to('cuda')`
+            torch.cuda.set_device(args.gpu_ids[0])
+            args.device = 'cuda'
+            cudnn.benchmark = args.cudnn_benchmark
+        elif args.gpu_ids == 'mps':
+            args.device = 'mps'
+        else:
+            args.device = 'cpu'
         
+        if args.rand_seed:
+            torch.manual_seed(args.rand_seed)
+            np.random.seed(args.rand_seed)
+            random.seed(args.rand_seed)
+            cudnn.deterministic = True
+
         return args

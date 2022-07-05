@@ -23,11 +23,12 @@ class ElasticNet(nn.Module):
 
 
 class PEElasticNet(PENetClassifier):
-    def __init__(self, model_depth, cardinality=32, num_channels=3, num_classes=600, init_method=None, intermediate_n=12,**kwargs):
-        super(PEElasticNet, self).__init__(model_depth, cardinality, num_channels, num_classes, init_method, **kwargs)
-        self.output = nn.Linear(2048 * 2 * 6 * 6, intermediate_n)
+    def __init__(self, model_depth=50, cardinality=32, num_channels=3, num_classes=600, init_method=None, **kwargs):
+        super(PEElasticNet, self).__init__(model_depth, cardinality,
+                                           num_channels, num_classes, init_method, **kwargs)
 
-    def forward(self, x):
+    def forward_feature(self, x, intermediate_n=12):
+        self.output = nn.Linear(2048 * 2 * 6 * 6, intermediate_n)
         # Expand input (allows pre-training on RGB videos, fine-tuning on Hounsfield Units)
         if x.size(1) < self.num_channels:
             x = x.expand(-1, self.num_channels // x.size(1), -1, -1, -1)
