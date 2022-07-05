@@ -1,4 +1,3 @@
-from transformers import ImageGPTForImageClassification
 from args.cfg_parser import CfgParser
 import data_loader
 import models
