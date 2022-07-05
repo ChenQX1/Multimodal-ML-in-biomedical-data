@@ -81,6 +81,7 @@ def fit_multimodal(parser):
     device = img_modal.device
     if parser.joint_merge:
         joint_loss = nn.BCELoss(reduction='mean')
+        connector_linear = nn.Linear(2048*2*6*6, dt_train_ehr.ehr_data.shape[1]).to(device)
         loss_log_train = []
         loss_log_val = []
         for i in range(parser.num_epochs):
@@ -92,8 +93,9 @@ def fit_multimodal(parser):
                     ehr_input, ehr_target = dt_train_ehr[target_dict['study_num']]
                     ehr_input, ehr_target = ehr_input.to(
                         device), ehr_target.to(device)
-                    img_feat = model_penet.module.forward_feature(img_input, intermediate_n=dt_train_ehr.ehr_data.shape[1])   # !!
-                    # print(f'===== img feat shape: {img_feat.shape}')
+                    img_feat = model_penet.module.forward_feature(img_input)   # !!
+                    print(f'===== img feat shape: {img_feat.shape}')
+                    img_feat = connector_linear(img_feat)
 
                     joint_input = img_feat + ehr_input
                     joint_logits = model_elastic_net(joint_input)
@@ -183,5 +185,4 @@ if __name__ == '__main__':
     util.set_spawn_enabled()
 
     parser = CfgParser()
-    ehr_dataset = EHRDataset(parser.ehr_modal, phase='train')
     fit_multimodal(parser)

@@ -5,7 +5,7 @@ from models.penet_classifier import PENetClassifier
 class ElasticNet(nn.Module):
     def __init__(self, in_feats: int, out_feats: int = 1) -> None:
         super(ElasticNet, self).__init__()
-        self.normlizer = nn.BatchNorm1d(in_feats)
+        self.normalizer = nn.BatchNorm1d(in_feats)
         self.output_layer = nn.Sequential(
             nn.Linear(in_feats, in_feats * 2, bias=True),
             nn.LeakyReLU(),
@@ -14,7 +14,7 @@ class ElasticNet(nn.Module):
         )
 
     def forward(self, x):
-        x = self.normlizer(x)
+        x = self.normalizer(x)
         x = self.output_layer(x)
 
         return x
@@ -31,8 +31,7 @@ class PEElasticNet(PENetClassifier):
         super(PEElasticNet, self).__init__(model_depth, cardinality,
                                            num_channels, num_classes, init_method, **kwargs)
 
-    def forward_feature(self, x, intermediate_n=12):
-        self.output = nn.Linear(2048 * 2 * 6 * 6, intermediate_n)
+    def forward_feature(self, x):
         # Expand input (allows pre-training on RGB videos, fine-tuning on Hounsfield Units)
         if x.size(1) < self.num_channels:
             x = x.expand(-1, self.num_channels // x.size(1), -1, -1, -1)
@@ -44,6 +43,5 @@ class PEElasticNet(PENetClassifier):
             x = encoder(x)
 
         x = x.view(x.size(0), -1)
-        x = self.output(x)
 
         return x
