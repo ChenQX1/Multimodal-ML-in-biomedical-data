@@ -1,5 +1,5 @@
 import torch.nn as nn
-from models.penet_classifier import PENetClassifier
+from .penet_classifier import PENetClassifier
 
 
 class ElasticNet(nn.Module):
@@ -10,7 +10,7 @@ class ElasticNet(nn.Module):
             nn.Linear(in_feats, in_feats, bias=True),
             nn.LeakyReLU(),
             nn.Linear(in_feats, out_feats, bias=True),
-            nn.Sigmoid()
+            # nn.Sigmoid()
         )
 
     def forward(self, x):

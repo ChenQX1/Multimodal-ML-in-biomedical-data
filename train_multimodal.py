@@ -1,3 +1,4 @@
+from cgi import print_arguments
 from args.cfg_parser import CfgParser
 import data_loader
 import models
@@ -68,7 +69,9 @@ def fit_multimodal(parser):
         dt_val_ehr, ehr_modal.batch_size * 2, sampler=dt_val_ehr.ehr_data.index.values)
     model_elastic_net = ElasticNet(
         in_feats=dt_train_ehr.ehr_data.shape[1], out_feats=ehr_modal.num_classes)
-    cls_loss_fn_ehr = nn.BCELoss(reduction='mean')
+    # cls_loss_fn_ehr = nn.BCELoss(reduction='mean')
+    cls_loss_fn_ehr = nn.CrossEntropyLoss()
+
     optimizer_ehr = util.get_optimizer(
         model_elastic_net.parameters(), ehr_modal)
     model_elastic_net = model_elastic_net.to(ehr_modal.device)
@@ -92,7 +95,6 @@ def fit_multimodal(parser):
                     ehr_input, ehr_target = ehr_input.to(
                         device), ehr_target.to(device)
                     img_feat = model_penet.module.forward_feature(img_input)   # !!
-                    print(f'===== img feat shape: {img_feat.shape}')
                     img_feat = connector_linear(img_feat)
 
                     joint_input = img_feat + ehr_input
@@ -159,6 +161,7 @@ def train_penet(args, logger, loader_train, model, loss_fn, optimizer, lr_schedu
                 cls_target = target_dict['is_abnormal'].to(args.device)
                 cls_loss = loss_fn(cls_logits, cls_target)
                 loss = cls_loss.mean()
+
                 logger.log_iter(inputs, cls_logits,
                                 target_dict, loss, optimizer)
 

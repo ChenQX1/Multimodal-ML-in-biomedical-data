@@ -13,12 +13,12 @@ class GAPLinear(nn.Module):
         self.avg_pool = nn.AdaptiveAvgPool3d(1)
         self.fc = nn.Linear(in_channels, out_channels)
         self.fc.is_output_head = True
-        self.output_layer = nn.Sigmoid()
+        # self.output_layer = nn.Sigmoid()
 
     def forward(self, x):
         x = self.avg_pool(x)
         x = x.view(x.size(0), -1)
         x = self.fc(x)
-        x = self.output_layer(x)
+        # x = self.output_layer(x)
 
         return x

@@ -10,7 +10,7 @@ train_img: False
 train_ehr: True
 joint_training: True
 num_epochs: 2
-gpu_ids: 0
+gpu_ids: -1
 cudnn_benchmark: False
 rand_seed: 42
 
@@ -68,8 +68,8 @@ multimodal:
     use_pretrained: False
 
     num_classes: 1
-    num_epochs: 10
-    batch_size: 2
+    num_epochs: 20
+    batch_size: 4
 
     optimizer: sgd
     learning_rate: 0.01
