@@ -82,7 +82,8 @@ def fit_multimodal(parser):
     device = img_modal.device
     if parser.joint_training:
         joint_loss = nn.BCELoss(reduction='mean')
-        connector_linear = nn.Linear(2048*2*6*6, dt_train_ehr.ehr_data.shape[1]).to(device)
+        connector_linear = nn.Linear(
+            2048*2*6*6, dt_train_ehr.ehr_data.shape[1]).to(device)
         loss_log_train = []
         loss_log_val = []
         for i in range(parser.num_epochs):
@@ -94,7 +95,8 @@ def fit_multimodal(parser):
                     ehr_input, ehr_target = dt_train_ehr[target_dict['study_num']]
                     ehr_input, ehr_target = ehr_input.to(
                         device), ehr_target.to(device)
-                    img_feat = model_penet.module.forward_feature(img_input)   # !!
+                    img_feat = model_penet.module.forward_feature(
+                        img_input)   # !!
                     img_feat = connector_linear(img_feat)
 
                     joint_input = img_feat + ehr_input
@@ -133,18 +135,27 @@ def train_elastic_net(args, loader_train, loader_val, model, optimizer, cls_loss
             loss.backward()
             optimizer.step()
             loss_ls.append(loss.detach().cpu().numpy())
-        loss_mean = np.mean(loss_ls)
-        loss_log_train.append(loss_mean)
+        loss_train = np.mean(loss_ls)
+        loss_log_train.append(loss_train)
 
         model.eval()
         with torch.no_grad():
-            loss_val = np.mean(
-                [cls_loss_fn(model(dt.to(args.device)), target.to(
-                    args.device)).detach().cpu().numpy() for dt, target in loader_val]
-            )
+            # loss_val = np.mean(
+            #     [cls_loss_fn(model(dt.to(args.device)), target.to(
+            #         args.device)).detach().cpu().numpy() for dt, target in loader_val]
+            # )
+            loss_ls = []
+            for j, batch in enumerate(loader_val):
+                dt, target = batch[0].to(args.device), batch[1].to(args.device)
+                logits = model(dt)
+                loss = cls_loss_fn(logits, target)
+                + args.l1_lambda * model.l1_reg()
+                + (1 - args.l1_lambda) * model.l2_reg()
+                loss_ls.append(loss.cpu().numpy())
+            loss_val = np.mean(loss_ls)
             loss_log_val.append(loss_val)
         print(
-            f'=========== Epoch {i} ============\n    training loss: {loss_mean}\n   validation loss: {loss_val}')
+            f'=========== Epoch {i} ============\n    training loss: {loss_train}\n   validation loss: {loss_val}')
 
     torch.save(model.state_dict(), args.ckpt_path)
 
