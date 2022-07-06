@@ -8,7 +8,7 @@ dataset:
 mode: train # train, test
 train_img: False
 train_ehr: True
-joint_training: True
+joint_training: False
 num_epochs: 2
 gpu_ids: -1
 cudnn_benchmark: False

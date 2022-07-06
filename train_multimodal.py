@@ -70,7 +70,7 @@ def fit_multimodal(parser):
     model_elastic_net = ElasticNet(
         in_feats=dt_train_ehr.ehr_data.shape[1], out_feats=ehr_modal.num_classes)
     # cls_loss_fn_ehr = nn.BCELoss(reduction='mean')
-    cls_loss_fn_ehr = nn.CrossEntropyLoss()
+    cls_loss_fn_ehr = nn.BCEWithLogitsLoss(reduction='mean')
 
     optimizer_ehr = util.get_optimizer(
         model_elastic_net.parameters(), ehr_modal)
@@ -172,6 +172,8 @@ def train_penet(args, logger, loader_train, model, loss_fn, optimizer, lr_schedu
                 cls_target = target_dict['is_abnormal'].to(args.device)
                 cls_loss = loss_fn(cls_logits, cls_target)
                 loss = cls_loss.mean()
+
+                print(f'==== PENet ===\n{cls_logits, cls_target}')
 
                 logger.log_iter(inputs, cls_logits,
                                 target_dict, loss, optimizer)
