@@ -128,9 +128,10 @@ def train_elastic_net(args, loader_train, loader_val, model, optimizer, cls_loss
         for j, batch in enumerate(loader_train):
             dt, target = batch[0].to(args.device), batch[1].to(args.device)
             logits = model(dt)
-            loss = cls_loss_fn(logits, target) + \
-                args.l1_lambda * model.l1_reg()
-            + (1 - args.l1_lambda) * model.l2_reg()
+            # loss = cls_loss_fn(logits, target) + \
+            #     args.l1_lambda * model.l1_reg()
+            # + (1 - args.l1_lambda) * model.l2_reg()
+            loss = cls_loss_fn(logits, target)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -140,17 +141,14 @@ def train_elastic_net(args, loader_train, loader_val, model, optimizer, cls_loss
 
         model.eval()
         with torch.no_grad():
-            # loss_val = np.mean(
-            #     [cls_loss_fn(model(dt.to(args.device)), target.to(
-            #         args.device)).detach().cpu().numpy() for dt, target in loader_val]
-            # )
             loss_ls = []
             for j, batch in enumerate(loader_val):
                 dt, target = batch[0].to(args.device), batch[1].to(args.device)
                 logits = model(dt)
+                # loss = cls_loss_fn(logits, target)
+                # + args.l1_lambda * model.l1_reg()
+                # + (1 - args.l1_lambda) * model.l2_reg()
                 loss = cls_loss_fn(logits, target)
-                + args.l1_lambda * model.l1_reg()
-                + (1 - args.l1_lambda) * model.l2_reg()
                 loss_ls.append(loss.cpu().numpy())
             loss_val = np.mean(loss_ls)
             loss_log_val.append(loss_val)
