@@ -52,15 +52,3 @@ class EHRCfg(BasicEHRCfg):
         self.use_pretrained = False
         self.num_epochs = 1
 
-        self.optimizer = 'sgd'
-        self.learning_rate = 0.01
-        # SGD
-        self.sgd_momentum = 0.9
-        self.sdg_dampening = 0.9
-        # Adam
-        self.adam_beta_1 = 0.9
-        self.adam_beta_2 = 0.999
-        # Regularization
-        self.dropout_prob = 0
-        self.l1_lambda = 0.1
-        self.weight_decay = 0.001

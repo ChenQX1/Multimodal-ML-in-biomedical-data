@@ -1,5 +1,4 @@
-# Basic config
-
+# Common
 name: experiment
 
 data_dir: data
@@ -11,8 +10,12 @@ joint_training: True
 num_epochs: 2
 gpu_ids: -1
 cudnn_benchmark: False
-
 rand_seed: 42
+
+log:
+  save_dir: logs
+
+results_dir: results
 
 multimodal:
   image:
@@ -29,12 +32,16 @@ multimodal:
     crop_shape: [192, 192]
     resize_shape: [208, 208]
     num_workers: 8
+
+    pe_types: [central, segmental]
+    use_hem: False
+    do_classify: True
+
     # model definition    
     model_depth: 50
     num_classes: 1
     num_epochs: 1
     num_slices: 24
-    num_visual: 8
     batch_size: 8
 
     optimizer: sgd
@@ -46,6 +53,8 @@ multimodal:
     lr_decay_step: 600000
     lr_scheduler: cosine_warmup
     lr_warmup_steps: 10000
+    # log
+    num_visual: 8
     epochs_per_eval: 1
     epochs_per_save: 1
     iters_per_print: 8
@@ -55,10 +64,7 @@ multimodal:
     fine_tuning_boundary: calssifier
     fine_tuning_lr: 0.01
 
-    pe_types: [central, segmental]
-    use_hem: False
-    
-    do_classify: True
+
 
   EHR:
     model: ElasticNet
@@ -78,7 +84,3 @@ multimodal:
     weight_decay: 0.001
     l1_lambda: 0.1
 
-log:
-  save_dir: logs
-
-results_dir: results
