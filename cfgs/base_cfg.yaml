@@ -1,21 +1,18 @@
 # Common
 name: experiment
 
-data_dir: data
-
-mode: test # train, test
-train_img: False
-train_ehr: False
-joint_training: True
-num_epochs: 2
 gpu_ids: -1
 cudnn_benchmark: False
 rand_seed: 42
 
-log:
-  save_dir: logs
-
+data_dir: data
+save_dir: logs
 results_dir: results
+
+train_img: False
+train_ehr: False
+joint_training: True
+num_epochs: 2
 
 multimodal:
   image:
@@ -63,8 +60,6 @@ multimodal:
     fine_tune: True
     fine_tuning_boundary: calssifier
     fine_tuning_lr: 0.01
-
-
 
   EHR:
     model: ElasticNet

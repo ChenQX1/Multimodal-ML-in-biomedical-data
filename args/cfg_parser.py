@@ -6,7 +6,6 @@ import json
 from typing import Dict
 import yaml
 import numpy as np
-from pprint import pprint as print
 import os
 import random
 import torch
@@ -18,33 +17,65 @@ import torch.backends.cudnn as cudnn
 # two models: one for img classification, one for EHR classification
 # two mode: training and test
 class CfgParser(object):
-    def __init__(self) -> None:
+    def __init__(self, phase=None) -> None:
         self.parser = argparse.ArgumentParser('Configuration file parser.')
         self.parser.add_argument('--cfg_file', type=str, default='base_cfg')
         args = self.parser.parse_args()
         with open(f'./cfgs/{args.cfg_file}.yaml', 'r') as fd:
             self.cfg_data: Dict = yaml.safe_load(fd)
 
-        self.mode = self.cfg_data['mode']
-        if self.mode == 'train':
-            self.img_modal = cfgs.train_cfg.PENetCfg()
-            self.ehr_modal = cfgs.train_cfg.EHRCfg()
-        elif self.mode == 'test':
-            self.img_modal = cfgs.test_cfg.PENetCfg()
-            self.ehr_modal = cfgs.test_cfg.EHRCfg()
-        else:
-            raise ValueError('The experiment mode must be "train" or "test" .')
-
+        self.img_modal = cfgs.IMGCfg()
+        self.ehr_modal = cfgs.EHRCfg()
+        self.phase = phase
         self.name = self.cfg_data['name']
-        self.save_dir = self.cfg_data['log']['save_dir']
         self.train_img = self.cfg_data['train_img']
         self.train_ehr = self.cfg_data['train_ehr']
         self.joint_training = self.cfg_data['joint_training']
         self.num_epochs = self.cfg_data['num_epochs']
+        self.rand_seed = self.cfg_data['rand_seed']
+        self.save_dir = self.cfg_data['save_dir']
+        if self.rand_seed:
+            torch.manual_seed(self.rand_seed)
+            np.random.seed(self.rand_seed)
+            random.seed(self.rand_seed)
+            cudnn.deterministic = True
 
+        self.img_modal = self._parse_common_cfg(self.img_modal)
         self.img_modal = self._parse_img_modal_cfg(self.img_modal)
+        self.ehr_modal = self._parse_common_cfg(self.ehr_modal)
         self.ehr_modal = self._parse_ehr_modal_cfg(self.ehr_modal)
         self._save_cfgs()
+
+    def _parse_common_cfg(self, args):
+        args.phase = self.phase
+        if self.phase == 'train':
+            args.is_training = True
+        elif self.phase == 'test':
+            args.is_training = False
+        else:
+            raise ValueError('The experiment mode must be "train" or "test" .')
+        args.rand_seed = self.cfg_data['rand_seed']
+        args.gpu_ids = self.cfg_data['gpu_ids']
+        args.cudnn_benchmark = self.cfg_data['cudnn_benchmark']
+        
+        args.name = self.cfg_data['name']
+        args.data_dir = self.cfg_data['data_dir']
+        args.save_dir = self.cfg_data['save_dir']
+        args.results_dir = self.cfg_data['results_dir']
+
+        if args.gpu_ids == -1:
+            args.gpu_ids = []
+        elif isinstance(args.gpu_ids, int):
+            args.gpu_ids = [args.gpu_ids]
+        if len(args.gpu_ids) > 0 and torch.cuda.is_available():
+            # Set default GPU for `tensor.to('cuda')`
+            torch.cuda.set_device(args.gpu_ids[0])
+            args.device = 'cuda'
+            cudnn.benchmark = args.cudnn_benchmark
+        else:
+            args.device = 'cpu'
+
+        return args
 
     def _save_cfgs(self):
         date_string = datetime.datetime.now() .strftime("%Y%m%d_%H%M%S")
@@ -56,17 +87,8 @@ class CfgParser(object):
             json.dump(vars(self.ehr_modal), fd, indent=4, sort_keys=True) 
 
     def _parse_img_modal_cfg(self, args):
-        args.phase = self.mode
-        args.rand_seed = self.cfg_data['rand_seed']
-        args.gpu_ids = self.cfg_data['gpu_ids']
-        args.cudnn_benchmark = self.cfg_data['cudnn_benchmark']
         [setattr(args, k, v)
          for k, v in self.cfg_data['multimodal']['image'].items()]
-        args.name = self.cfg_data['name']
-        args.data_dir = self.cfg_data['data_dir']
-        args.save_dir = self.cfg_data['log']['save_dir']
-        if self.mode == 'test':
-            args.results_dir = self.cfg_data['results_dir']
 
         args.start_epoch = 1  # Gets updated if we load a checkpoint
         if not args.is_training and not args.ckpt_path and not (hasattr(args, 'test_2d') and args.test_2d):
@@ -81,26 +103,6 @@ class CfgParser(object):
                     args.lr_milestones, allow_empty=False)
         if not args.pkl_path:
             args.pkl_path = os.path.join(args.data_dir, 'series_list.pkl')
-
-        if args.gpu_ids == -1:
-            args.gpu_ids = []
-        elif isinstance(args.gpu_ids, int):
-            args.gpu_ids = [args.gpu_ids]
-        if len(args.gpu_ids) > 0 and torch.cuda.is_available():
-            # Set default GPU for `tensor.to('cuda')`
-            torch.cuda.set_device(args.gpu_ids[0])
-            args.device = 'cuda'
-            cudnn.benchmark = args.cudnn_benchmark
-        else:
-            args.device = 'cpu'
-            # args.device = 'mps'
-
-        # Set random seed for a deterministic run
-        if args.rand_seed:
-            torch.manual_seed(args.rand_seed)
-            np.random.seed(args.rand_seed)
-            random.seed(args.rand_seed)
-            cudnn.deterministic = True
 
         # Map dataset name to a class
         if args.dataset == 'kinetics':
@@ -140,34 +142,7 @@ class CfgParser(object):
         return args
 
     def _parse_ehr_modal_cfg(self, args):
-        args.rand_seed = self.cfg_data['rand_seed']
-        args.gpu_ids = self.cfg_data['gpu_ids']
-        args.cudnn_benchmark = self.cfg_data['cudnn_benchmark']
         [setattr(args, k, v)
          for k, v in self.cfg_data['multimodal']['EHR'].items()]
-        args.name = self.cfg_data['name']
-        args.data_dir = self.cfg_data['data_dir']
-        args.save_dir = self.cfg_data['log']['save_dir']
-
-        if args.gpu_ids == -1:
-            args.gpu_ids = []
-        elif isinstance(args.gpu_ids, int):
-            args.gpu_ids = [args.gpu_ids]
-
-        if len(args.gpu_ids) > 0 and torch.cuda.is_available():
-            # Set default GPU for `tensor.to('cuda')`
-            torch.cuda.set_device(args.gpu_ids[0])
-            args.device = 'cuda'
-            cudnn.benchmark = args.cudnn_benchmark
-        elif args.gpu_ids == 'mps':
-            args.device = 'mps'
-        else:
-            args.device = 'cpu'
-        
-        if args.rand_seed:
-            torch.manual_seed(args.rand_seed)
-            np.random.seed(args.rand_seed)
-            random.seed(args.rand_seed)
-            cudnn.deterministic = True
 
         return args

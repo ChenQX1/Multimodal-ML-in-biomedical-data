@@ -1,2 +1,1 @@
-python train_multimodal.py \
-        --cfg_file=training_cfg
+python train_multimodal.py --cfg_file=base_cfg

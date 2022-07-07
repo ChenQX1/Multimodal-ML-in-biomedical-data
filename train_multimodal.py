@@ -77,9 +77,11 @@ def fit_multimodal(parser):
     if parser.train_ehr:
         train_elastic_net(ehr_modal, loader_train_ehr, loader_val_ehr,
                           model_elastic_net, optimizer_ehr, cls_loss_fn_ehr)
+
     # Multimodal
     device = img_modal.device
     if parser.joint_training:
+        print('============== Joint Training ==============')
         joint_loss = nn.BCEWithLogitsLoss(reduction='mean')
         connector_linear = nn.Linear(
             2048*2*6*6, dt_train_ehr.ehr_data.shape[1]).to(device)
@@ -194,5 +196,5 @@ def train_penet(args, logger, loader_train, model, loss_fn, optimizer, lr_schedu
 if __name__ == '__main__':
     util.set_spawn_enabled()
 
-    parser = CfgParser()
+    parser = CfgParser(phase='train')
     fit_multimodal(parser)

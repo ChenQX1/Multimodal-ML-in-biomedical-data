@@ -143,5 +143,5 @@ def save_for_xgb(results_dir, series2probs, series2labels):
 
 if __name__ == '__main__':
     util.set_spawn_enabled()
-    parser = CfgParser()
+    parser = CfgParser(phase='test')
     test(parser.img_modal)
