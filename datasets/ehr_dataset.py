@@ -36,7 +36,7 @@ class EHRDataset(Dataset):
             tmp_tb = tmp_tb[tmp_tb.split == phase].drop(['split'], axis=1)
             tb_ls.append(tmp_tb)
 
-        ans = pd.concat(tb_ls, axis=1, join='inner')
+        ans = pd.concat(tb_ls, axis=1)
         ans = ans.loc[:, ~ans.columns.duplicated()].drop(['pe_type'], axis=1)
 
         labels = ans[['label']]

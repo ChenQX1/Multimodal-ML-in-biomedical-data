@@ -5,6 +5,7 @@ import os
 import sklearn.metrics as sk_metrics
 import torch
 import torch.nn.functional as F
+from args.cfg_parser import CfgParser
 import util
 
 from args import TestArgParser
@@ -142,6 +143,5 @@ def save_for_xgb(results_dir, series2probs, series2labels):
 
 if __name__ == '__main__':
     util.set_spawn_enabled()
-    parser = TestArgParser()
-    args_ = parser.parse_args()
-    test(args_)
+    parser = CfgParser()
+    test(parser.img_modal)

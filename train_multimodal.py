@@ -1,4 +1,3 @@
-from cgi import print_arguments
 from args.cfg_parser import CfgParser
 import data_loader
 import models
@@ -59,7 +58,7 @@ def fit_multimodal(parser):
     if parser.train_img:
         train_penet(img_modal, logger, loader_train_penet, model_penet,
                     cls_loss_fn_penet, optimizer_penet, lr_scheduler_penet, evaluator, saver)
-
+    # EHR
     ehr_modal = parser.ehr_modal
     dt_train_ehr = EHRDataset(ehr_modal, phase='train')
     dt_val_ehr = EHRDataset(ehr_modal, phase='val')
@@ -78,10 +77,10 @@ def fit_multimodal(parser):
     if parser.train_ehr:
         train_elastic_net(ehr_modal, loader_train_ehr, loader_val_ehr,
                           model_elastic_net, optimizer_ehr, cls_loss_fn_ehr)
-
+    # Multimodal
     device = img_modal.device
     if parser.joint_training:
-        joint_loss = nn.BCELoss(reduction='mean')
+        joint_loss = nn.BCEWithLogitsLoss(reduction='mean')
         connector_linear = nn.Linear(
             2048*2*6*6, dt_train_ehr.ehr_data.shape[1]).to(device)
         loss_log_train = []
@@ -92,11 +91,11 @@ def fit_multimodal(parser):
                 with torch.set_grad_enabled(True):
                     img_input = img_input.to(device)
                     img_target = target_dict['is_abnormal'].to(device)
-                    ehr_input, ehr_target = dt_train_ehr[target_dict['study_num']]
+                    ehr_input, ehr_target = dt_train_ehr[target_dict['study_num'].numpy()]
+                    # print(f'====== Compare targets ==========\n{img_target}\n{ehr_target}')
                     ehr_input, ehr_target = ehr_input.to(
                         device), ehr_target.to(device)
-                    img_feat = model_penet.module.forward_feature(
-                        img_input)   # !!
+                    img_feat = model_penet.module.forward_feature(img_input)   # !!
                     img_feat = connector_linear(img_feat)
 
                     joint_input = img_feat + ehr_input

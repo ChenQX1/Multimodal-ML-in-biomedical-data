@@ -2,24 +2,23 @@
 
 name: experiment
 
-dataset:
-  data_dir: data
+data_dir: data
 
-mode: train # train, test
+mode: test # train, test
 train_img: False
-train_ehr: True
-joint_training: False
+train_ehr: False
+joint_training: True
 num_epochs: 2
 gpu_ids: -1
 cudnn_benchmark: False
-rand_seed: 42
 
+rand_seed: 42
 
 multimodal:
   image:
     model: PEElasticNet
     dataset: pe
-    ckpt_path: ckpts/xnet_kin_90.pth.tar
+    ckpt_path: ckpts/penet_best.pth.tar
     use_pretrained: True
 
     # preprocessing
@@ -82,3 +81,4 @@ multimodal:
 log:
   save_dir: logs
 
+results_dir: results

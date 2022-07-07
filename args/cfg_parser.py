@@ -53,18 +53,20 @@ class CfgParser(object):
         with open('/'.join([save_dir, 'args.json']), 'w') as fd:
             json.dump(vars(self.img_modal), fd, indent=4, sort_keys=True)
             fd.write('\n')
-            json.dump(vars(self.ehr_modal), fd, indent=4, sort_keys=True)
-    
+            json.dump(vars(self.ehr_modal), fd, indent=4, sort_keys=True) 
 
     def _parse_img_modal_cfg(self, args):
+        args.phase = self.mode
         args.rand_seed = self.cfg_data['rand_seed']
         args.gpu_ids = self.cfg_data['gpu_ids']
         args.cudnn_benchmark = self.cfg_data['cudnn_benchmark']
         [setattr(args, k, v)
          for k, v in self.cfg_data['multimodal']['image'].items()]
         args.name = self.cfg_data['name']
-        args.data_dir = self.cfg_data['dataset']['data_dir']
+        args.data_dir = self.cfg_data['data_dir']
         args.save_dir = self.cfg_data['log']['save_dir']
+        if self.mode == 'test':
+            args.results_dir = self.cfg_data['results_dir']
 
         args.start_epoch = 1  # Gets updated if we load a checkpoint
         if not args.is_training and not args.ckpt_path and not (hasattr(args, 'test_2d') and args.test_2d):
@@ -130,6 +132,7 @@ class CfgParser(object):
 
         # Set up output dir (test mode only)
         if not args.is_training:
+            date_string = datetime.datetime.now() .strftime("%Y%m%d_%H%M%S")
             args.results_dir = os.path.join(
                 args.results_dir, '{}_{}'.format(args.name, date_string))
             os.makedirs(args.results_dir, exist_ok=True)
@@ -143,7 +146,7 @@ class CfgParser(object):
         [setattr(args, k, v)
          for k, v in self.cfg_data['multimodal']['EHR'].items()]
         args.name = self.cfg_data['name']
-        args.data_dir = self.cfg_data['dataset']['data_dir']
+        args.data_dir = self.cfg_data['data_dir']
         args.save_dir = self.cfg_data['log']['save_dir']
 
         if args.gpu_ids == -1:

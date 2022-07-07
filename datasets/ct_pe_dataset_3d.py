@@ -88,6 +88,7 @@ class CTPEDataset3d(BaseCTDataset):
             return False
 
         return True
+
     def __len__(self):
         return len(self.window_to_series_idx)
 

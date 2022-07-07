@@ -46,7 +46,7 @@ class BasicPENetCfg(object):
         self.do_classify = False
         self.num_visuals = 4
         self.save_dir = None
- 
+
 
 class BasicEHRCfg(object):
     def __init__(self) -> None:
