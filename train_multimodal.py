@@ -172,8 +172,6 @@ def train_penet(args, logger, loader_train, model, loss_fn, optimizer, lr_schedu
                 cls_loss = loss_fn(cls_logits, cls_target)
                 loss = cls_loss.mean()
 
-                print(f'==== PENet ===\n{cls_logits, cls_target}')
-
                 logger.log_iter(inputs, cls_logits,
                                 target_dict, loss, optimizer)
 
