@@ -10,8 +10,8 @@ save_dir: logs
 results_dir: results
 
 train_img: False
-train_ehr: False
-joint_training: True
+train_ehr: True
+joint_training: False
 num_epochs: 2
 
 multimodal:
@@ -64,7 +64,7 @@ multimodal:
   EHR:
     model: ElasticNet
     dataset: all_ehr
-    ckpt_path: ckpts/elastic.pth
+    ckpt_path: ckpts/elastic_net.pth
     use_pretrained: False
 
     num_classes: 1

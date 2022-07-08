@@ -93,10 +93,9 @@ def fit_multimodal(parser):
                 with torch.set_grad_enabled(True):
                     img_input = img_input.to(device)
                     img_target = target_dict['is_abnormal'].to(device)
-                    ehr_input, ehr_target = dt_train_ehr[target_dict['study_num'].numpy()]
-                    # print(f'====== Compare targets ==========\n{img_target}\n{ehr_target}')
-                    ehr_input, ehr_target = ehr_input.to(
-                        device), ehr_target.to(device)
+                    ehr_input, ehr_target = dt_train_ehr[target_dict['study_num'].numpy(
+                    )]
+                    ehr_input, ehr_target = ehr_input.to(device), ehr_target.to(device)
                     img_feat = model_penet.module.forward_feature(img_input)   # !!
                     img_feat = connector_linear(img_feat)
 
@@ -115,6 +114,8 @@ def fit_multimodal(parser):
             print(
                 f'=========== Epoch {i} ============\n    training loss: {loss_mean}')
             loss_log_train.append(loss_mean)
+        torch.save(connector_linear.state_dict(),
+                   './ckpts/connector_linear.pth')
     else:
         pass
 
@@ -156,7 +157,8 @@ def train_elastic_net(args, loader_train, loader_val, model, optimizer, cls_loss
         print(
             f'=========== Epoch {i} ============\n    training loss: {loss_train}\n   validation loss: {loss_val}')
 
-    torch.save(model.state_dict(), args.ckpt_path)
+    torch.save(model.state_dict(),
+               '/'.join([args.save_dir, f'{args.name}_elasticnet.pth']))
 
 
 def train_penet(args, logger, loader_train, model, loss_fn, optimizer, lr_scheduler, evaluator, saver):

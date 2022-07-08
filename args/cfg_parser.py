@@ -26,6 +26,7 @@ class CfgParser(object):
 
         self.img_modal = cfgs.IMGCfg()
         self.ehr_modal = cfgs.EHRCfg()
+
         self.phase = phase
         self.name = self.cfg_data['name']
         self.train_img = self.cfg_data['train_img']
@@ -33,7 +34,11 @@ class CfgParser(object):
         self.joint_training = self.cfg_data['joint_training']
         self.num_epochs = self.cfg_data['num_epochs']
         self.rand_seed = self.cfg_data['rand_seed']
+
         self.save_dir = self.cfg_data['save_dir']
+        date_string = datetime.datetime.now() .strftime("%Y%m%d_%H%M%S")
+        self.save_dir = '/'.join([self.save_dir, f'{self.name}_{date_string}'])
+
         if self.rand_seed:
             torch.manual_seed(self.rand_seed)
             np.random.seed(self.rand_seed)
@@ -47,6 +52,7 @@ class CfgParser(object):
         self._save_cfgs()
 
     def _parse_common_cfg(self, args):
+        args.name = self.name
         args.phase = self.phase
         if self.phase == 'train':
             args.is_training = True
@@ -60,7 +66,7 @@ class CfgParser(object):
         
         args.name = self.cfg_data['name']
         args.data_dir = self.cfg_data['data_dir']
-        args.save_dir = self.cfg_data['save_dir']
+        args.save_dir = self.save_dir
         args.results_dir = self.cfg_data['results_dir']
 
         if args.gpu_ids == -1:
@@ -78,10 +84,8 @@ class CfgParser(object):
         return args
 
     def _save_cfgs(self):
-        date_string = datetime.datetime.now() .strftime("%Y%m%d_%H%M%S")
-        save_dir = '/'.join([self.save_dir, f'{self.name}_{date_string}'])
-        os.makedirs(save_dir, exist_ok=True)
-        with open('/'.join([save_dir, 'args.json']), 'w') as fd:
+        os.makedirs(self.save_dir, exist_ok=True)
+        with open('/'.join([self.save_dir, 'args.json']), 'w') as fd:
             json.dump(vars(self.img_modal), fd, indent=4, sort_keys=True)
             fd.write('\n')
             json.dump(vars(self.ehr_modal), fd, indent=4, sort_keys=True) 
