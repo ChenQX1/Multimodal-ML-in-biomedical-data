@@ -18,7 +18,7 @@ multimodal:
   image:
     model: PEElasticNet
     dataset: pe
-    ckpt_path: ckpts/penet_best.pth.tar
+    ckpt_path: ckpts/best.pth.tar
     use_pretrained: True
 
     # preprocessing

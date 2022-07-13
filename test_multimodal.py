@@ -25,14 +25,16 @@ def test(parser):
     ehr_modal = parser.ehr_modal
     device = img_modal.device
     print("Stage 1")
-    model_penet, ckpt_info = ModelSaver.load_model(img_modal.ckpt_path, img_modal.gpu_ids)
+    model_penet, ckpt_info = ModelSaver.load_model(
+        img_modal.ckpt_path, img_modal.gpu_ids)
     print("Stage 2")
     img_modal.start_epoch = ckpt_info['epoch'] + 1
     model_penet = model_penet.to(device)
     print("Stage 3")
     model_penet.eval()
     print("Stage 4")
-    data_loader_penet = CTDataLoader(img_modal, phase=img_modal.phase, is_training=False)
+    data_loader_penet = CTDataLoader(
+        img_modal, phase=img_modal.phase, is_training=False)
     study2slices = defaultdict(list)
     study2probs = defaultdict(list)
     study2labels = {}
@@ -41,18 +43,23 @@ def test(parser):
 
     # EHR
     dt_ehr = EHRDataset(ehr_modal, phase='test')
-    model_elastic_net = ElasticNet(in_feats=dt_ehr.ehr_data.shape[1], out_feats=ehr_modal.num_classes)
-    model_elastic_net.load_state_dict(torch.load(ehr_modal.ckpt_path))
+    model_elastic_net = ElasticNet(
+        in_feats=dt_ehr.ehr_data.shape[1], out_feats=ehr_modal.num_classes)
+    model_elastic_net.load_state_dict(torch.load(ehr_modal.ckpt_path, map_location=device))
     if parser.joint_training:
-        connettor_linear = nn.Linear(2048*2*6*6, dt_ehr.ehr_data.shape[1]).to(device)
-        connettor_linear.load_state_dict(torch.load('./ckpts/connector_linear.pth'))
+        connettor_linear = nn.Linear(
+            2048*2*6*6, dt_ehr.ehr_data.shape[1]).to(device)
+        connettor_linear.load_state_dict(
+            torch.load('./ckpts/connector_linear.pth'))
 
     # Get model outputs, log to TensorBoard, write masks to disk window-by-window
-    util.print_err('Writing model outputs to {}...'.format(img_modal.results_dir))
+    util.print_err('Writing model outputs to {}...'.format(
+        img_modal.results_dir))
     with tqdm(total=len(data_loader_penet.dataset), unit=' windows') as progress_bar:
         for i, (img_input, targets_dict) in enumerate(data_loader_penet):
             with torch.no_grad():
-                ehr_input, ehr_target = dt_ehr[targets_dict['study_num'].numpy()]
+                ehr_input, ehr_target = dt_ehr[targets_dict['study_num'].numpy(
+                )]
                 ehr_input = ehr_input.to(device)
                 if parser.joint_training:
                     img_feat = model_penet.forward_feature(img_input)
@@ -62,7 +69,7 @@ def test(parser):
                     img_logits = model_penet(img_input.to(device))
                     ehr_logits = model_elastic_net(ehr_input)
                     cls_logits = (img_logits + ehr_logits) / 2
-                
+
                 cls_probs = torch.sigmoid(cls_logits)
 
             if img_modal.visualize_all:
@@ -105,8 +112,6 @@ def test(parser):
         labels.append(label)
         predictions[study_num] = {'label': label, 'pred': max_prob}
 
-
-
     # Save predictions to file, indexed by study number
     print("Save to pickle")
     with open('{}/preds.pickle'.format(img_modal.results_dir), "wb") as fp:
@@ -137,7 +142,8 @@ def test(parser):
     for name, curve in curves.items():
         curve_np = util.get_plot(name, curve)
         curve_img = Image.fromarray(curve_np)
-        curve_img.save(os.path.join(img_modal.results_dir, '{}.png'.format(name)))
+        curve_img.save(os.path.join(
+            img_modal.results_dir, '{}.png'.format(name)))
 
 
 def save_for_xgb(results_dir, series2probs, series2labels):
