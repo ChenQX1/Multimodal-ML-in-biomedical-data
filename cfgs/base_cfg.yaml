@@ -10,15 +10,15 @@ save_dir: logs
 results_dir: results
 
 train_img: False
-train_ehr: True
+train_ehr: False
 joint_training: False
-num_epochs: 2
+num_epochs: 1
 
 multimodal:
   image:
     model: PEElasticNet
     dataset: pe
-    ckpt_path: ckpts/best.pth.tar
+    ckpt_path: ckpts/xnet_kin_90.pth.tar
     use_pretrained: True
 
     # preprocessing
@@ -77,5 +77,7 @@ multimodal:
     sgd_dampening: 0.9
 
     weight_decay: 0.001
-    l1_lambda: 0.1
+    l1_ratio: 0.1
+    alpha: 0
+    n_early_stopping: -1
 

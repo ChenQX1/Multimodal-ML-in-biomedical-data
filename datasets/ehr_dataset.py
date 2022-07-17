@@ -3,12 +3,14 @@ import pandas as pd
 import numpy as np
 from torch.utils.data import Dataset
 import torch
+from sklearn.preprocessing import StandardScaler
 
 
 class EHRDataset(Dataset):
     def __init__(self, args, phase) -> None:
         super(EHRDataset, self).__init__()
         self.ehr_data, self.labels = self._load_ehr_data(args, phase)
+        self.ehr_data = self.transform(self.ehr_data)
 
     def __len__(self):
         return len(self.ehr_data)
@@ -43,3 +45,6 @@ class EHRDataset(Dataset):
         dt = ans.drop('label', axis=1)
 
         return dt, labels
+
+    def transform(self, X: pd.DataFrame):
+        pass

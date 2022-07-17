@@ -1,6 +1,6 @@
 python train.py --data_dir=data \
                 --ckpt_path=ckpts/xnet_kin_90.pth.tar \
-                --save_dir=train_logs \
+                --save_dir=logs \
 		--name=Test \
 		--abnormal_prob=0.3 \
                 --agg_method=max \

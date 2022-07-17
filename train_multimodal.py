@@ -123,6 +123,9 @@ def fit_multimodal(parser):
 def train_elastic_net(args, loader_train, loader_val, model, optimizer, cls_loss_fn):
     loss_log_train = []
     loss_log_val = []
+    
+    last_loss = -torch.inf
+    trigger_times = 0
 
     for i in range(args.num_epochs):
         model.train()
@@ -130,10 +133,7 @@ def train_elastic_net(args, loader_train, loader_val, model, optimizer, cls_loss
         for j, batch in enumerate(loader_train):
             dt, target = batch[0].to(args.device), batch[1].to(args.device)
             logits = model(dt)
-            # loss = cls_loss_fn(logits, target) + \
-            #     args.l1_lambda * model.l1_reg()
-            # + (1 - args.l1_lambda) * model.l2_reg()
-            loss = cls_loss_fn(logits, target)
+            loss = cls_loss_fn(logits, target) + args.alpha * args.l1_ratio * model.l1_reg() + 0.5 * args.alpha * (1-args.l1_ratio)* model.l2_reg()
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -142,23 +142,26 @@ def train_elastic_net(args, loader_train, loader_val, model, optimizer, cls_loss
         loss_log_train.append(loss_train)
 
         model.eval()
+        loss_ls = []
         with torch.no_grad():
-            loss_ls = []
             for j, batch in enumerate(loader_val):
                 dt, target = batch[0].to(args.device), batch[1].to(args.device)
                 logits = model(dt)
-                # loss = cls_loss_fn(logits, target)
-                # + args.l1_lambda * model.l1_reg()
-                # + (1 - args.l1_lambda) * model.l2_reg()
-                loss = cls_loss_fn(logits, target)
+                loss = cls_loss_fn(logits, target) + args.alpha * args.l1_ratio * model.l1_reg() + 0.5 * args.alpha * (1-args.l1_ratio)* model.l2_reg()
                 loss_ls.append(loss.cpu().numpy())
             loss_val = np.mean(loss_ls)
             loss_log_val.append(loss_val)
         print(
             f'=========== Epoch {i} ============\n    training loss: {loss_train}\n   validation loss: {loss_val}')
+        if loss_val > last_loss:
+            trigger_times += 1
+        last_loss = loss_val
+        if args.n_early_stopping > 0 and trigger_times >= args.n_early_stopping:
+            break
 
+    print(f'Saving Model to: {args.save_dir}')
     torch.save(model.state_dict(),
-               '/'.join([args.save_dir, f'{args.name}_elasticnet.pth']))
+               '/'.join([args.save_dir, f'{args.name}_elastic_net.pth']))
 
 
 def train_penet(args, logger, loader_train, model, loss_fn, optimizer, lr_scheduler, evaluator, saver):

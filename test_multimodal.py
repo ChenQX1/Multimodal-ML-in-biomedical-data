@@ -46,6 +46,7 @@ def test(parser):
     model_elastic_net = ElasticNet(
         in_feats=dt_ehr.ehr_data.shape[1], out_feats=ehr_modal.num_classes)
     model_elastic_net.load_state_dict(torch.load(ehr_modal.ckpt_path, map_location=device))
+    model_elastic_net = model_elastic_net.to(device)
     if parser.joint_training:
         connettor_linear = nn.Linear(
             2048*2*6*6, dt_ehr.ehr_data.shape[1]).to(device)

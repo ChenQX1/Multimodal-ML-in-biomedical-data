@@ -10,7 +10,6 @@ class ElasticNet(nn.Module):
             nn.Linear(in_feats, in_feats, bias=True),
             nn.LeakyReLU(),
             nn.Linear(in_feats, out_feats, bias=True),
-            # nn.Sigmoid()
         )
 
     def forward(self, x):
