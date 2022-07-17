@@ -46,5 +46,7 @@ class EHRDataset(Dataset):
 
         return dt, labels
 
+    # TODO: add data preprocessing
     def transform(self, X: pd.DataFrame):
-        pass
+
+        return X
