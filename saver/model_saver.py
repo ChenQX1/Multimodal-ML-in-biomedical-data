@@ -54,7 +54,7 @@ class ModelSaver(object):
             ckpt_dict = {
                 'ckpt_info': {'epoch': epoch, self.metric_name: metric_val},
                 'model_name': model.__class__.__name__,
-                'model_state': model.to('cpu').state_dict(),
+                'model_state': model.module.to('cpu').state_dict(),
                 'optimizer': optimizer.state_dict(),
             }
 
@@ -63,20 +63,20 @@ class ModelSaver(object):
                 'ckpt_info': {'epoch': epoch, self.metric_name: metric_val},
                 'model_name': model.module.__class__.__name__,
                 'model_args': model.module.args_dict(),
-                'model_state': model.to('cpu').state_dict(),
+                'model_state': model.module.to('cpu').state_dict(),
                 'optimizer': optimizer.state_dict(),
                 'lr_scheduler': lr_scheduler.state_dict()
             }
         model.to(device)
 
         ckpt_path = os.path.join(
-            self.save_dir, 'epoch_{}.pth.tar'.format(epoch))
+            self.save_dir, 'epoch_{}.pth'.format(epoch))
         torch.save(ckpt_dict, ckpt_path)
 
         if self._is_best(metric_val):
             # Save the best model
             self.best_metric_val = metric_val
-            best_path = os.path.join(self.save_dir, 'best.pth.tar')
+            best_path = os.path.join(self.save_dir, 'best.pth')
             shutil.copy(ckpt_path, best_path)
 
         # Remove a checkpoint if more than max_ckpts ckpts saved
@@ -96,8 +96,7 @@ class ModelSaver(object):
         Returns:
             Model loaded from checkpoint, dict of additional checkpoint info (e.g. epoch, metric).
         """
-        device = 'cuda:{}'.format(gpu_ids[0]) if len(gpu_ids) > 0 else 'cpu'
-        ckpt_dict = torch.load(ckpt_path, map_location=device)
+        ckpt_dict = torch.load(ckpt_path, map_location=torch.device('cpu'))
 
         # Build model, load parameters
         try:
@@ -106,7 +105,6 @@ class ModelSaver(object):
             model_fn = models.__dict__["PENetClassifier"]
         model_args = ckpt_dict['model_args']
         model = model_fn(**model_args)
-        model = nn.DataParallel(model, gpu_ids)
         model.load_state_dict(ckpt_dict['model_state'])
 
         return model, ckpt_dict['ckpt_info']

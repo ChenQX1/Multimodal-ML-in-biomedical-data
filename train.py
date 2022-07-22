@@ -20,7 +20,7 @@ def train(args):
         model = model_fn(**vars(args))
         if args.use_pretrained:
             model.load_pretrained(args.ckpt_path, args.gpu_ids)
-        model = nn.DataParallel(model, args.gpu_ids)
+    model = nn.DataParallel(model, args.gpu_ids)
     model = model.to(args.device)
     model.train()
 

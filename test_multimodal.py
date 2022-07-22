@@ -5,13 +5,11 @@ import os
 import sklearn.metrics as sk_metrics
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from args.cfg_parser import CfgParser
 from datasets.ehr_dataset import EHRDataset
 from models.pe_elastic_net import ElasticNet
 import util
 
-from args import TestArgParser
 from data_loader import CTDataLoader
 from collections import defaultdict
 from logger import TestLogger
@@ -24,6 +22,7 @@ def test(parser):
     img_modal = parser.img_modal
     ehr_modal = parser.ehr_modal
     device = img_modal.device
+    img_feat_size = 2048
     print("Stage 1")
     model_penet, ckpt_info = ModelSaver.load_model(
         img_modal.ckpt_path, img_modal.gpu_ids)
@@ -43,15 +42,24 @@ def test(parser):
 
     # EHR
     dt_ehr = EHRDataset(ehr_modal, phase='test')
-    model_elastic_net = ElasticNet(
-        in_feats=dt_ehr.ehr_data.shape[1], out_feats=ehr_modal.num_classes)
-    model_elastic_net.load_state_dict(torch.load(ehr_modal.ckpt_path, map_location=device))
+    if parser.joint_training:
+        model_elastic_net = ElasticNet(
+            in_feats=dt_ehr.ehr_data.shape[1], out_feats=2048)
+    else:
+        model_elastic_net = ElasticNet(
+           in_feats=dt_ehr.ehr_data.shape[1], out_feats=ehr_modal.num_classes
+        )
+    model_elastic_net.load_state_dict(torch.load(
+            ehr_modal.ckpt_path, map_location=device))
     model_elastic_net = model_elastic_net.to(device)
     if parser.joint_training:
-        connettor_linear = nn.Linear(
-            2048*2*6*6, dt_ehr.ehr_data.shape[1]).to(device)
-        connettor_linear.load_state_dict(
-            torch.load('./ckpts/connector_linear.pth'))
+        classifier_head = nn.Sequential(
+            nn.LeakyReLU(),
+            nn.Linear(img_feat_size* 2, ehr_modal.num_classes)
+        )
+        classifier_head.load_state_dict(
+            torch.load('./ckpts/classifier_head.pth'))
+        classifier_head = classifier_head.to(device)
 
     # Get model outputs, log to TensorBoard, write masks to disk window-by-window
     util.print_err('Writing model outputs to {}...'.format(
@@ -61,11 +69,12 @@ def test(parser):
             with torch.no_grad():
                 ehr_input, ehr_target = dt_ehr[targets_dict['study_num'].numpy(
                 )]
-                ehr_input = ehr_input.to(device)
+                ehr_input, ehr_target = ehr_input.to(device), ehr_target.to(device)
                 if parser.joint_training:
-                    img_feat = model_penet.forward_feature(img_input)
-                    img_feat = connettor_linear(img_feat)
-                    cls_logits = model_elastic_net(ehr_input + img_feat)
+                    img_feat = model_penet.forward_feature(img_input.to(device))
+                    ehr_feat = model_elastic_net(ehr_input)
+                    joint_input = torch.concat([img_feat, ehr_feat], dim=1)
+                    cls_logits = classifier_head(joint_input)
                 else:
                     img_logits = model_penet(img_input.to(device))
                     ehr_logits = model_elastic_net(ehr_input)

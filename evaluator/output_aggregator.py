@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 import util
 
@@ -82,6 +81,6 @@ class OutputAggregator(object):
         def log_reg_reduce(outputs):
             hist_, _ = np.histogram(outputs, bins=self.num_bins, range=(0, 1))
             inputs_ = torch.tensor(hist_, dtype=torch.float32).to(device)
-            return F.sigmoid(self.classifier(inputs_)).detach().cpu().numpy()
+            return torch.sigmoid(self.classifier(inputs_)).detach().cpu().numpy()
 
         self._reduce = log_reg_reduce

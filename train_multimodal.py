@@ -1,3 +1,4 @@
+from pyexpat import model
 from args.cfg_parser import CfgParser
 import data_loader
 import models
@@ -7,7 +8,6 @@ import util
 from torch.utils.data import DataLoader
 import numpy as np
 
-from args import TrainArgParser
 from evaluator import ModelEvaluator
 from logger import TrainLogger
 from saver import ModelSaver
@@ -16,19 +16,24 @@ from models.pe_elastic_net import ElasticNet, PEElasticNet
 
 
 def fit_multimodal(parser):
+    img_modal = parser.img_modal
+    ehr_modal = parser.ehr_modal
+    device = img_modal.device
     # PENet
     # Get the model
-    img_modal = parser.img_modal
     if img_modal.ckpt_path and not img_modal.use_pretrained:
-        model_penet, ckpt_info_penet = ModelSaver.load_model(
-            img_modal.ckpt_path, img_modal.gpu_ids)
+        ckpt_dict = torch.load(img_modal.ckpt_path, map_location=torch.device('cpu'))
+        model_fn = models.__dict__[img_modal.model]
+        model_penet = model_fn(**ckpt_dict['model_args'])
+        model_penet.load_state_dict(ckpt_dict['model_state'])
+        ckpt_info_penet = ckpt_dict['ckpt_info']
         img_modal.start_epoch = ckpt_info_penet['epoch'] + 1
     else:
         model_fn = models.__dict__[img_modal.model]
         model_penet = model_fn(**vars(img_modal))
         if img_modal.use_pretrained:
             model_penet.load_pretrained(img_modal.ckpt_path, img_modal.gpu_ids)
-        model_penet = nn.DataParallel(model_penet, img_modal.gpu_ids)
+    model_penet = nn.DataParallel(model_penet, img_modal.gpu_ids)
     model_penet = model_penet.to(img_modal.device)
     model_penet.train()
     # Get optimizer and scheduler
@@ -58,17 +63,22 @@ def fit_multimodal(parser):
     if parser.train_img:
         train_penet(img_modal, logger, loader_train_penet, model_penet,
                     cls_loss_fn_penet, optimizer_penet, lr_scheduler_penet, evaluator, saver)
+    img_feat_size = 2048
+
     # EHR
-    ehr_modal = parser.ehr_modal
     dt_train_ehr = EHRDataset(ehr_modal, phase='train')
     dt_val_ehr = EHRDataset(ehr_modal, phase='val')
     loader_train_ehr = DataLoader(
         dt_train_ehr, ehr_modal.batch_size, sampler=dt_train_ehr.ehr_data.index.values)
     loader_val_ehr = DataLoader(
         dt_val_ehr, ehr_modal.batch_size * 2, sampler=dt_val_ehr.ehr_data.index.values)
-    model_elastic_net = ElasticNet(
+    if parser.joint_training:
+        model_elastic_net = ElasticNet(
+        in_feats=dt_train_ehr.ehr_data.shape[1], out_feats=img_feat_size)
+    else: 
+        model_elastic_net = ElasticNet(
         in_feats=dt_train_ehr.ehr_data.shape[1], out_feats=ehr_modal.num_classes)
-    # cls_loss_fn_ehr = nn.BCELoss(reduction='mean')
+    model_elastic_net = model_elastic_net.to(device)
     cls_loss_fn_ehr = nn.BCEWithLogitsLoss(reduction='mean')
 
     optimizer_ehr = util.get_optimizer(
@@ -79,17 +89,18 @@ def fit_multimodal(parser):
                           model_elastic_net, optimizer_ehr, cls_loss_fn_ehr)
 
     # Multimodal
-    device = img_modal.device
     if parser.joint_training:
         print('============== Joint Training ==============')
         joint_loss = nn.BCEWithLogitsLoss(reduction='mean')
-        connector_linear = nn.Linear(
-            2048*2*6*6, dt_train_ehr.ehr_data.shape[1]).to(device)
+        classifier_head = nn.Sequential(
+            nn.LeakyReLU(),
+            nn.Linear(img_feat_size * 2, img_modal.num_classes),
+        ).to(device)
         loss_log_train = []
         loss_log_val = []
         for i in range(parser.num_epochs):
             loss_ls = []
-            for img_input, target_dict in loader_train_penet:
+            for iter_n, (img_input, target_dict) in enumerate(loader_train_penet):
                 with torch.set_grad_enabled(True):
                     img_input = img_input.to(device)
                     img_target = target_dict['is_abnormal'].to(device)
@@ -97,11 +108,11 @@ def fit_multimodal(parser):
                     )]
                     ehr_input, ehr_target = ehr_input.to(device), ehr_target.to(device)
                     img_feat = model_penet.module.forward_feature(img_input)   # !!
-                    img_feat = connector_linear(img_feat)
+                    ehr_feat = model_elastic_net(ehr_input)
 
-                    joint_input = img_feat + ehr_input
-                    joint_logits = model_elastic_net(joint_input)
-                    loss = joint_loss(joint_logits, ehr_target)
+                    joint_input = torch.concat([img_feat, ehr_feat], dim=1)
+                    joint_logits = classifier_head(joint_input)
+                    loss = joint_loss(joint_logits, img_target)
 
                     optimizer_penet.zero_grad()
                     optimizer_ehr.zero_grad()
@@ -110,14 +121,15 @@ def fit_multimodal(parser):
                     optimizer_ehr.step()
 
                     loss_ls.append(loss.detach().cpu().numpy())
+                    if iter_n % 100 == 0:
+                        print(f'    +++++ iter: {iter_n} loss: {loss}')
             loss_mean = np.mean(loss_ls)
             print(
                 f'=========== Epoch {i} ============\n    training loss: {loss_mean}')
             loss_log_train.append(loss_mean)
-        torch.save(connector_linear.state_dict(),
-                   './ckpts/connector_linear.pth')
-    else:
-        pass
+        torch.save(classifier_head.state_dict(), '/'.join([parser.save_dir, 'classifier_head.pth']))
+        torch.save(model_elastic_net.state_dict(), '/'.join([parser.save_dir, 'joint_elastic_net.pth']))
+        saver.save(i, model_penet, optimizer_penet, lr_scheduler_penet, img_modal.device, metric_val=None)
 
 
 def train_elastic_net(args, loader_train, loader_val, model, optimizer, cls_loss_fn):
@@ -161,13 +173,13 @@ def train_elastic_net(args, loader_train, loader_val, model, optimizer, cls_loss
 
     print(f'Saving Model to: {args.save_dir}')
     torch.save(model.state_dict(),
-               '/'.join([args.save_dir, f'{args.name}_elastic_net.pth']))
+               '/'.join([args.save_dir, f'elastic_net.pth']))
 
 
 def train_penet(args, logger, loader_train, model, loss_fn, optimizer, lr_scheduler, evaluator, saver):
     while not logger.is_finished_training():
         logger.start_epoch()
-
+        print('begin training')
         for inputs, target_dict in loader_train:
             logger.start_iter()
             with torch.set_grad_enabled(True):

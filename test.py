@@ -5,6 +5,7 @@ import os
 import sklearn.metrics as sk_metrics
 import torch
 import torch.nn.functional as F
+import torch.nn as nn
 import util
 
 from args import TestArgParser
@@ -19,6 +20,7 @@ from tqdm import tqdm
 def test(args):
     print("Stage 1")
     model, ckpt_info = ModelSaver.load_model(args.ckpt_path, args.gpu_ids)
+    model = nn.DataParallel(model, args.gpu_ids)
     print("Stage 2")
     args.start_epoch = ckpt_info['epoch'] + 1
     model = model.to(args.device)

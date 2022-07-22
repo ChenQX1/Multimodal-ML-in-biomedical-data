@@ -1,7 +1,7 @@
 # Common
 name: experiment
 
-gpu_ids: -1
+gpu_ids: 0
 cudnn_benchmark: False
 rand_seed: 42
 
@@ -11,15 +11,15 @@ results_dir: results
 
 train_img: False
 train_ehr: False
-joint_training: False
+joint_training: True
 num_epochs: 1
 
 multimodal:
   image:
     model: PEElasticNet
     dataset: pe
-    ckpt_path: ckpts/xnet_kin_90.pth.tar
-    use_pretrained: True
+    ckpt_path: ckpts/penet_best.pth
+    use_pretrained: False
 
     # preprocessing
     abnormal_prob: 0.3
@@ -28,7 +28,7 @@ multimodal:
     best_ckpt_metric: val_AUROC
     crop_shape: [192, 192]
     resize_shape: [208, 208]
-    num_workers: 8
+    num_workers: 4
 
     pe_types: [central, segmental]
     use_hem: False
@@ -65,7 +65,6 @@ multimodal:
     model: ElasticNet
     dataset: all_ehr
     ckpt_path: ckpts/elastic_net.pth
-    use_pretrained: False
 
     num_classes: 1
     num_epochs: 20

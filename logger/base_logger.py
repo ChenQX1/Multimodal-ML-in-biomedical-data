@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import torch.nn.functional as F
+import torch
 import util
 
 from datetime import datetime
@@ -99,7 +99,7 @@ class BaseLogger(object):
 
         cls_logits = cls_logits.detach().to('cpu')
 
-        cls_probs = F.sigmoid(cls_logits).numpy()
+        cls_probs = torch.sigmoid(cls_logits).numpy()
 
         is_3d = inputs.dim() > 4
         num_visualized = 0
