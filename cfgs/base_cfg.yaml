@@ -20,6 +20,7 @@ multimodal:
     dataset: pe
     ckpt_path: ckpts/penet_best.pth
     use_pretrained: False
+    img_feat_size: 2048
 
     # preprocessing
     abnormal_prob: 0.3
@@ -28,7 +29,7 @@ multimodal:
     best_ckpt_metric: val_AUROC
     crop_shape: [192, 192]
     resize_shape: [208, 208]
-    num_workers: 4
+    num_workers: 8
 
     pe_types: [central, segmental]
     use_hem: False

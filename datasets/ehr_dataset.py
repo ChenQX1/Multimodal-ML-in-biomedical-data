@@ -19,7 +19,7 @@ class EHRDataset(Dataset):
         dt = self.ehr_data.loc[index, :].values
         labels = self.labels.loc[index, :].values
 
-        return torch.tensor(dt, dtype=torch.float), torch.tensor(labels, dtype=torch.float)
+        return torch.from_numpy(dt), torch.from_numpy(labels)
 
     def _load_ehr_data(self, args, phase):
         tb_ls = []
@@ -41,8 +41,8 @@ class EHRDataset(Dataset):
         ans = pd.concat(tb_ls, axis=1)
         ans = ans.loc[:, ~ans.columns.duplicated()].drop(['pe_type'], axis=1)
 
-        labels = ans[['label']]
-        dt = ans.drop('label', axis=1)
+        labels = ans[['label']].astype('float32')
+        dt = ans.drop('label', axis=1).astype('float32')
 
         return dt, labels
 

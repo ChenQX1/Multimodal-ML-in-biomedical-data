@@ -38,6 +38,7 @@ class CfgParser(object):
         self.save_dir = self.cfg_data['save_dir']
         date_string = datetime.datetime.now() .strftime("%Y%m%d_%H%M%S")
         self.save_dir = '/'.join([self.save_dir, f'{self.name}_{date_string}'])
+        self._set_device()
 
         if self.rand_seed:
             torch.manual_seed(self.rand_seed)
@@ -69,19 +70,24 @@ class CfgParser(object):
         args.save_dir = self.save_dir
         args.results_dir = self.cfg_data['results_dir']
 
-        if args.gpu_ids == -1:
-            args.gpu_ids = []
-        elif isinstance(args.gpu_ids, int):
-            args.gpu_ids = [args.gpu_ids]
-        if len(args.gpu_ids) > 0 and torch.cuda.is_available():
-            # Set default GPU for `tensor.to('cuda')`
-            torch.cuda.set_device(args.gpu_ids[0])
-            args.device = 'cuda'
-            cudnn.benchmark = args.cudnn_benchmark
-        else:
-            args.device = 'cpu'
+        args.gpu_ids = self.gpu_ids
+        args.device = self.device
 
         return args
+    
+    def _set_device(self):
+        self.gpu_ids = self.cfg_data['gpu_ids']
+        if self.gpu_ids == -1:
+            self.gpu_ids = []
+        elif isinstance(self.gpu_ids, int):
+            self.gpu_ids = [self.gpu_ids]
+        if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+            # Set default GPU for `tensor.to('cuda')`
+            # torch.cuda.set_device(self.gpu_ids[0])
+            self.device = f'cuda:{self.gpu_ids[0]}'
+            cudnn.benchmark = self.cfg_data['cudnn_benchmark']
+        else:
+            self.device = 'cpu'
 
     def _save_cfgs(self):
         os.makedirs(self.save_dir, exist_ok=True)

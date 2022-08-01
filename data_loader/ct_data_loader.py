@@ -1,8 +1,10 @@
-import datasets
 import torch
-
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
+from torch.utils.data.distributed import DistributedSampler
+import torch.distributed as dist
+
+import datasets
 from .padded_inputs import PaddedInputs
 from .sorted_sampler import SortedSampler
 
@@ -11,7 +13,8 @@ class CTDataLoader(DataLoader):
     """ Base class DataLoader for loading a 3d dataset. This data loader is designed to work with
     sequential models, and takes care of sorting batches and padding them for the pytorch
     recurrent networks. Note that the dataset MUST BE SORTED BY LENGTH for this to work."""
-    def __init__(self, args, phase, is_training=True):
+    def __init__(self, args, phase: str, is_training):
+
         dataset_fn = datasets.__dict__[args.dataset]
         dataset = dataset_fn(args, phase, is_training)
         self.batch_size_ = args.batch_size
@@ -25,13 +28,23 @@ class CTDataLoader(DataLoader):
                                                num_workers=args.num_workers,
                                                batch_sampler=batch_sampler,
                                                collate_fn=self.pad_sequences,
+                                               drop_last=True,
+                                               prefetch_factor=2,
                                                pin_memory=True)
         elif args.loader == 'window' or args.loader == 'slice':
-            super(CTDataLoader, self).__init__(dataset,
-                                               batch_size=args.batch_size,
-                                               shuffle=is_training,
-                                               num_workers=args.num_workers,
-                                               pin_memory=True)
+            tmp_params = {
+                'dataset': dataset,
+                'batch_size': args.batch_size,
+                'num_workers': args.num_workers,
+                'drop_last': True,
+                'prefetch_factor': 2,
+                'pin_memory': True
+            }
+            if phase == 'train':
+                tmp_params.update({'sampler': DistributedSampler(dataset, shuffle=is_training)})
+            else:
+                tmp_params.update({'shuffle': is_training})
+            super(CTDataLoader, self).__init__(**tmp_params)
         else:
             raise NotImplementedError('Invalid args.loader: {}'.format(args.loader))
 

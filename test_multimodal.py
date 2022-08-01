@@ -19,51 +19,52 @@ from tqdm import tqdm
 
 
 def test(parser):
-    img_modal = parser.img_modal
-    ehr_modal = parser.ehr_modal
-    device = img_modal.device
-    img_feat_size = 2048
+    cfgs_img = parser.img_modal
+    cfgs_ehr = parser.ehr_modal
+    img_feat_size = cfgs_img.img_feat_size
+    device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+
     print("Stage 1")
     model_penet, ckpt_info = ModelSaver.load_model(
-        img_modal.ckpt_path, img_modal.gpu_ids)
+        cfgs_img.ckpt_path, cfgs_img.gpu_ids)
     print("Stage 2")
-    img_modal.start_epoch = ckpt_info['epoch'] + 1
+    cfgs_img.start_epoch = ckpt_info['epoch'] + 1
     model_penet = model_penet.to(device)
     print("Stage 3")
     model_penet.eval()
     print("Stage 4")
     data_loader_penet = CTDataLoader(
-        img_modal, phase=img_modal.phase, is_training=False)
+        cfgs_img, phase=cfgs_img.phase, is_training=False)
     study2slices = defaultdict(list)
     study2probs = defaultdict(list)
     study2labels = {}
-    logger = TestLogger(img_modal, len(data_loader_penet.dataset),
+    logger = TestLogger(cfgs_img, len(data_loader_penet.dataset),
                         data_loader_penet.dataset.pixel_dict)
 
     # EHR
-    dt_ehr = EHRDataset(ehr_modal, phase='test')
+    dt_ehr = EHRDataset(cfgs_ehr, phase='test')
     if parser.joint_training:
         model_elastic_net = ElasticNet(
             in_feats=dt_ehr.ehr_data.shape[1], out_feats=2048)
     else:
         model_elastic_net = ElasticNet(
-           in_feats=dt_ehr.ehr_data.shape[1], out_feats=ehr_modal.num_classes
+           in_feats=dt_ehr.ehr_data.shape[1], out_feats=cfgs_ehr.num_classes
         )
     model_elastic_net.load_state_dict(torch.load(
-            ehr_modal.ckpt_path, map_location=device))
+            cfgs_ehr.ckpt_path, map_location=device))
     model_elastic_net = model_elastic_net.to(device)
     if parser.joint_training:
         classifier_head = nn.Sequential(
             nn.LeakyReLU(),
-            nn.Linear(img_feat_size* 2, ehr_modal.num_classes)
+            nn.Linear(img_feat_size* 2, cfgs_ehr.num_classes)
         )
         classifier_head.load_state_dict(
-            torch.load('./ckpts/classifier_head.pth'))
+            torch.load('./ckpts/classifier_head.pth', map_location=device))
         classifier_head = classifier_head.to(device)
 
     # Get model outputs, log to TensorBoard, write masks to disk window-by-window
     util.print_err('Writing model outputs to {}...'.format(
-        img_modal.results_dir))
+        cfgs_img.results_dir))
     with tqdm(total=len(data_loader_penet.dataset), unit=' windows') as progress_bar:
         for i, (img_input, targets_dict) in enumerate(data_loader_penet):
             with torch.no_grad():
@@ -82,9 +83,9 @@ def test(parser):
 
                 cls_probs = torch.sigmoid(cls_logits)
 
-            if img_modal.visualize_all:
+            if cfgs_img.visualize_all:
                 logger.visualize(
-                    img_input, cls_logits, targets_dict=None, phase=img_modal.phase, unique_id=i)
+                    img_input, cls_logits, targets_dict=None, phase=cfgs_img.phase, unique_id=i)
 
             max_probs = cls_probs.to('cpu').numpy()
             for study_num, slice_idx, prob in \
@@ -124,36 +125,36 @@ def test(parser):
 
     # Save predictions to file, indexed by study number
     print("Save to pickle")
-    with open('{}/preds.pickle'.format(img_modal.results_dir), "wb") as fp:
+    with open('{}/preds.pickle'.format(cfgs_img.results_dir), "wb") as fp:
         pickle.dump(predictions, fp)
 
     # Write features for XGBoost
-    save_for_xgb(img_modal.results_dir, study2probs, study2labels)
+    save_for_xgb(cfgs_img.results_dir, study2probs, study2labels)
     # Write the slice indices used for the features
     print("Write slice indices")
-    with open(os.path.join(img_modal.results_dir, 'xgb', 'series2slices.json'), 'w') as json_fh:
+    with open(os.path.join(cfgs_img.results_dir, 'xgb', 'series2slices.json'), 'w') as json_fh:
         json.dump(study2slices, json_fh, sort_keys=True, indent=4)
 
     # Compute AUROC and AUPRC using max aggregation, write to files
     max_probs, labels = np.array(max_probs), np.array(labels)
     metrics = {
-        img_modal.phase + '_' + 'AUPRC': sk_metrics.average_precision_score(labels, max_probs),
-        img_modal.phase + '_' + 'AUROC': sk_metrics.roc_auc_score(labels, max_probs),
+        cfgs_img.phase + '_' + 'AUPRC': sk_metrics.average_precision_score(labels, max_probs),
+        cfgs_img.phase + '_' + 'AUROC': sk_metrics.roc_auc_score(labels, max_probs),
     }
     print("Write metrics")
-    with open(os.path.join(img_modal.results_dir, 'metrics.txt'), 'w') as metrics_fh:
+    with open(os.path.join(cfgs_img.results_dir, 'metrics.txt'), 'w') as metrics_fh:
         for k, v in metrics.items():
             metrics_fh.write('{}: {:.5f}\n'.format(k, v))
 
     curves = {
-        img_modal.phase + '_' + 'PRC': sk_metrics.precision_recall_curve(labels, max_probs),
-        img_modal.phase + '_' + 'ROC': sk_metrics.roc_curve(labels, max_probs)
+        cfgs_img.phase + '_' + 'PRC': sk_metrics.precision_recall_curve(labels, max_probs),
+        cfgs_img.phase + '_' + 'ROC': sk_metrics.roc_curve(labels, max_probs)
     }
     for name, curve in curves.items():
         curve_np = util.get_plot(name, curve)
         curve_img = Image.fromarray(curve_np)
         curve_img.save(os.path.join(
-            img_modal.results_dir, '{}.png'.format(name)))
+            cfgs_img.results_dir, '{}.png'.format(name)))
 
 
 def save_for_xgb(results_dir, series2probs, series2labels):

@@ -3,6 +3,8 @@ import os
 import shutil
 import torch
 import torch.nn as nn
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import _LRScheduler
 
 
 class ModelSaver(object):
@@ -36,7 +38,7 @@ class ModelSaver(object):
                 or (self.maximize_metric and self.best_metric_val < metric_val)
                 or (not self.maximize_metric and self.best_metric_val > metric_val))
 
-    def save(self, epoch, model, optimizer, lr_scheduler=None, device=None, metric_val=None):
+    def save(self, epoch: int, model: nn.Module, optimizer: Optimizer, lr_scheduler: _LRScheduler=None, device=None, metric_val=None):
         """If this epoch corresponds to a save epoch, save model parameters to disk.
 
         Args:
@@ -54,23 +56,22 @@ class ModelSaver(object):
             ckpt_dict = {
                 'ckpt_info': {'epoch': epoch, self.metric_name: metric_val},
                 'model_name': model.__class__.__name__,
-                'model_state': model.module.to('cpu').state_dict(),
+                'model_state': model.state_dict(),
                 'optimizer': optimizer.state_dict(),
             }
 
         else:
             ckpt_dict = {
                 'ckpt_info': {'epoch': epoch, self.metric_name: metric_val},
-                'model_name': model.module.__class__.__name__,
-                'model_args': model.module.args_dict(),
-                'model_state': model.module.to('cpu').state_dict(),
+                'model_name': model.__class__.__name__,
+                'model_args': model.args_dict(),
+                'model_state': model.state_dict(),
                 'optimizer': optimizer.state_dict(),
                 'lr_scheduler': lr_scheduler.state_dict()
             }
-        model.to(device)
 
         ckpt_path = os.path.join(
-            self.save_dir, 'epoch_{}.pth'.format(epoch))
+            self.save_dir, f'{model.__class__.__name__}.epoch_{epoch}.pth')
         torch.save(ckpt_dict, ckpt_path)
 
         if self._is_best(metric_val):
@@ -86,7 +87,7 @@ class ModelSaver(object):
             os.remove(oldest_ckpt)
 
     @classmethod
-    def load_model(cls, ckpt_path, gpu_ids):
+    def load_model(cls, ckpt_path, gpu_ids=None, joint_training=False):
         """Load model parameters from disk.
 
         Args:
@@ -98,11 +99,14 @@ class ModelSaver(object):
         """
         ckpt_dict = torch.load(ckpt_path, map_location=torch.device('cpu'))
 
-        # Build model, load parameters
-        try:
-            model_fn = models.__dict__[ckpt_dict['model_name']]
-        except:
-            model_fn = models.__dict__["PENetClassifier"]
+        if not joint_training:
+            try:
+                model_fn = models.__dict__[ckpt_dict['model_name']]
+            except:
+                # model_fn = models.__dict__["PENetClassifier"]
+                raise ValueError("Wrong model name!")
+        else:
+            model_fn = models.__dict__['PEElasticNet']
         model_args = ckpt_dict['model_args']
         model = model_fn(**model_args)
         model.load_state_dict(ckpt_dict['model_state'])
@@ -118,7 +122,7 @@ class ModelSaver(object):
             optimizer: Optimizer to initialize with parameters from the checkpoint.
             lr_scheduler: Optional learning rate scheduler to initialize with parameters from the checkpoint.
         """
-        ckpt_dict = torch.load(ckpt_path)
+        ckpt_dict = torch.load(ckpt_path, map_location=torch.device('cpu'))
         optimizer.load_state_dict(ckpt_dict['optimizer'])
         if lr_scheduler is not None:
             lr_scheduler.load_state_dict(ckpt_dict['lr_scheduler'])

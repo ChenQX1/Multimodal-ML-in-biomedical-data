@@ -2,6 +2,8 @@ import math
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
+from torch.optim.lr_scheduler import _LRScheduler
+import warnings
 
 from functools import partial
 from models.loss import *
@@ -25,7 +27,7 @@ def get_loss_fn(is_classification, dataset, size_average=True):
         return BinaryFocalLoss()
 
 
-def get_optimizer(parameters, args):
+def get_optimizer(parameters, args=None):
     """Get a PyTorch optimizer for params.
 
     Args:
@@ -35,21 +37,33 @@ def get_optimizer(parameters, args):
     Returns:
         PyTorch optimizer specified by args_.
     """
-    if args.optimizer == 'sgd':
-        optimizer = optim.SGD(parameters, args.learning_rate,
-                          momentum=args.sgd_momentum,
-                          weight_decay=args.weight_decay,
-                          dampening=args.sgd_dampening)
-    elif args.optimizer == 'adam':
-        optimizer = optim.Adam(parameters, args.learning_rate,
-                               betas=(args.adam_beta_1, args.adam_beta_2), weight_decay=args.weight_decay)
+    if args is None:
+        optim_params = {
+            "lr": 0.01,
+            "momentum": 0.9,
+            "dampening": 0.9,
+            "weight_decay": 0.001
+        }
+        optimizer = optim.SGD(parameters, **optim_params)
+        warnings.warn(
+            f"\n No valid optimizer args, use the SGD optimizer with default parameters:"
+            f"\n {optim_params}")
     else:
-        raise ValueError('Unsupported optimizer: {}'.format(args.optimizer))
+        if args.optimizer == 'sgd':
+            optimizer = optim.SGD(parameters, args.learning_rate,
+                            momentum=args.sgd_momentum,
+                            weight_decay=args.weight_decay,
+                            dampening=args.sgd_dampening)
+        elif args.optimizer == 'adam':
+            optimizer = optim.Adam(parameters, args.learning_rate,
+                                betas=(args.adam_beta_1, args.adam_beta_2), weight_decay=args.weight_decay)
+        else:
+            raise ValueError('Unsupported optimizer: {}'.format(args.optimizer))
 
     return optimizer
 
 
-def get_scheduler(optimizer, args):
+def get_scheduler(optimizer, args) -> _LRScheduler:
     """Get a learning rate scheduler.
 
     Args:
