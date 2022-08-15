@@ -23,7 +23,7 @@ def sample_data(data_root, sample_data_dir):
     with open(os.path.join(sample_data_dir, 'series_list.pkl'), 'wb') as fd:
         pickle.dump(sereis_list_smaple, fd)
 
-    tables = ['Demographics.csv', 'ICD.csv', 'INP_MED.csv', 'Labels.csv', 'LABS.csv', 'OUT_MED.csv']
+    tables = ['Demographics.csv', 'ICD.csv', 'INP_MED.csv', 'Labels.csv', 'LABS.csv', 'OUT_MED.csv', 'Vitals.csv']
     idx2map = dict(zip(
         x['idx'].values,
         x['idx'].apply(lambda t: True if t in train_idx + val_idx + test_idx else False).values

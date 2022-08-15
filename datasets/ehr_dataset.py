@@ -1,10 +1,13 @@
+import imp
+from locale import normalize
+import mimetypes
 import os
 import pandas as pd
 import numpy as np
 from torch.utils.data import Dataset
 import torch
 from sklearn.preprocessing import StandardScaler
-
+import pickle
 
 class EHRDataset(Dataset):
     def __init__(self, args, phase) -> None:
@@ -46,7 +49,26 @@ class EHRDataset(Dataset):
 
         return dt, labels
 
-    # TODO: add data preprocessing
     def transform(self, X: pd.DataFrame):
+        if(self.phase == 'train'):
+            drop_col = X.columns[X.nunique() == 1]
+            # remove zero variance featurs
+            X = X.drop(drop_col, axis=1)
 
-        return X
+            std_scaler = StandardScaler()
+            # normalize
+            X_imputed = std_scaler.fit_transform(X)
+            X_imputed_df = pd.DataFrame(data = X_imputed, columns = X.columns, index = X.index)
+            
+            with open('transform_para.pkl', 'wb') as f:
+                pickle.dump([drop_col, std_scaler], f)
+        else:
+            with open('transform_para.pkl', 'rb') as f:
+                drop_col, std_scaler = pickle.load(f)
+            # remove zero variance featurs
+            X = X.drop(drop_col, axis=1)
+            # normalize
+            X_imputed = std_scaler.transform(X)
+            X_imputed_df = pd.DataFrame(data = X_imputed, columns = X.columns, index = X.index)
+
+        return X_imputed_df
