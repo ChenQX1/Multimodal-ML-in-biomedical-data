@@ -12,6 +12,7 @@ import pickle
 class EHRDataset(Dataset):
     def __init__(self, args, phase) -> None:
         super(EHRDataset, self).__init__()
+        self.phase = phase
         self.ehr_data, self.labels = self._load_ehr_data(args, phase)
         self.ehr_data = self.transform(self.ehr_data)
 
@@ -33,21 +34,26 @@ class EHRDataset(Dataset):
                 if tb_.endswith('.csv'):
                     dataset.append(tb_)
             args.dataset = dataset
-        
+
         for tb_ in args.dataset:
-            tmp_tb = pd.read_csv('/'.join([args.data_dir, tb_])).groupby('idx').last()
+            tmp_tb = pd.read_csv(os.path.join(args.data_dir, tb_)).groupby('idx').last()
             if 'Unnamed: 0' in tmp_tb.columns:
-                tmp_tb.drop('Unnamed: 0', axis=1, inplace=True)
-            tmp_tb = tmp_tb[tmp_tb.split == phase].drop(['split'], axis=1)
+                tmp_tb = tmp_tb.drop('Unnamed: 0', axis=1, inplace=False)
+
+            if phase != 'test':
+                tmp_tb = tmp_tb[tmp_tb.split != 'test'].drop('split', axis=1)
+            else:
+                tmp_tb = tmp_tb[tmp_tb.split == 'test'].drop('split', axis=1)
             tb_ls.append(tmp_tb)
 
         ans = pd.concat(tb_ls, axis=1)
-        ans = ans.loc[:, ~ans.columns.duplicated()].drop(['pe_type'], axis=1)
-
+        ans = ans.loc[:, ~ans.columns.duplicated()].drop('pe_type', axis=1)
         labels = ans[['label']].astype('float32')
         dt = ans.drop('label', axis=1).astype('float32')
 
         return dt, labels
+
+
 
     def transform(self, X: pd.DataFrame):
         if(self.phase == 'train'):
