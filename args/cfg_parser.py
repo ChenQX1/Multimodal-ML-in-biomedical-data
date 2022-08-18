@@ -24,16 +24,21 @@ class CfgParser(object):
         with open(f'./cfgs/{args.cfg_file}.yaml', 'r') as fd:
             self.cfg_data: Dict = yaml.safe_load(fd)
 
-        self.img_modal = cfgs.IMGCfg()
-        self.ehr_modal = cfgs.EHRCfg()
+        self.cfgs_ct = cfgs.CTCfg()
+        self.cfgs_ehr = cfgs.EHRCfg()
 
         self.phase = phase
+
         self.name = self.cfg_data['name']
-        self.train_img = self.cfg_data['train_img']
-        self.train_ehr = self.cfg_data['train_ehr']
-        self.joint_training = self.cfg_data['joint_training']
-        self.num_epochs = self.cfg_data['num_epochs']
-        self.rand_seed = self.cfg_data['rand_seed']
+        [setattr(self, k, v)
+         for k, v in self.cfg_data['joint_config'].items()]
+
+        # self.train_img = self.cfg_data['train_img']
+        # self.train_ehr = self.cfg_data['train_ehr']
+        # self.joint_training = self.cfg_data['joint_training']
+        # self.num_epochs = self.cfg_data['num_epochs']
+        # self.num_wokers = self.cfg_data['num_workers']
+        # self.rand_seed = self.cfg_data['rand_seed']
 
         self.save_dir = self.cfg_data['save_dir']
         date_string = datetime.datetime.now() .strftime("%Y%m%d_%H%M%S")
@@ -46,10 +51,10 @@ class CfgParser(object):
             random.seed(self.rand_seed)
             cudnn.deterministic = True
 
-        self.img_modal = self._parse_common_cfg(self.img_modal)
-        self.img_modal = self._parse_img_modal_cfg(self.img_modal)
-        self.ehr_modal = self._parse_common_cfg(self.ehr_modal)
-        self.ehr_modal = self._parse_ehr_modal_cfg(self.ehr_modal)
+        self.cfgs_ct = self._parse_common_cfg(self.cfgs_ct)
+        self.cfgs_ct = self._parse_ct_cfg(self.cfgs_ct)
+        self.cfgs_ehr = self._parse_common_cfg(self.cfgs_ehr)
+        self.cfgs_ehr = self._parse_ehr_cfg(self.cfgs_ehr)
         self._save_cfgs()
 
     def _parse_common_cfg(self, args):
@@ -69,6 +74,7 @@ class CfgParser(object):
         args.data_dir = self.cfg_data['data_dir']
         args.save_dir = self.save_dir
         args.results_dir = self.cfg_data['results_dir']
+        args.rand_seed = self.cfg_data['rand_seed']
 
         args.gpu_ids = self.gpu_ids
         args.device = self.device
@@ -92,11 +98,11 @@ class CfgParser(object):
     def _save_cfgs(self):
         os.makedirs(self.save_dir, exist_ok=True)
         with open('/'.join([self.save_dir, 'args.json']), 'w') as fd:
-            json.dump(vars(self.img_modal), fd, indent=4, sort_keys=True)
+            json.dump(vars(self.cfgs_ct), fd, indent=4, sort_keys=True)
             fd.write('\n')
-            json.dump(vars(self.ehr_modal), fd, indent=4, sort_keys=True) 
+            json.dump(vars(self.cfgs_ehr), fd, indent=4, sort_keys=True) 
 
-    def _parse_img_modal_cfg(self, args):
+    def _parse_ct_cfg(self, args):
         [setattr(args, k, v)
          for k, v in self.cfg_data['multimodal']['image'].items()]
 
@@ -151,7 +157,7 @@ class CfgParser(object):
 
         return args
 
-    def _parse_ehr_modal_cfg(self, args):
+    def _parse_ehr_cfg(self, args):
         [setattr(args, k, v)
          for k, v in self.cfg_data['multimodal']['EHR'].items()]
 

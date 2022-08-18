@@ -14,11 +14,14 @@ class CommonCfg(object):
     save_dir = None
     resutls_dir = None
 
+    num_epochs = 1
+    num_workers = 4
+
 
 # Write fundamental configurations in the class.
 # Usually these cfgs do not change.
 @dataclass
-class IMGCfg(CommonCfg):
+class CTCfg(CommonCfg):
     series = 'sagittal'
     pe_types = ['central', 'segmental']
     hide_probability = 0

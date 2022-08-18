@@ -1,18 +1,33 @@
 # Common
 name: experiment
 
-gpu_ids: 0
-cudnn_benchmark: False
-rand_seed: 42
+joint_config:
+  gpu_ids: 0
+  cudnn_benchmark: False
+  rand_seed: 42
 
-data_dir: data
-save_dir: logs
-results_dir: results
+  ckpt_path:
+  data_dir: data
+  save_dir: logs
+  results_dir: results
 
-train_img: False
-train_ehr: False
-joint_training: True
-num_epochs: 1
+  train_img: False
+  train_ehr: False
+  joint_training: True
+
+  model: PENetElasticNet
+  num_epochs: 1
+  num_workers: 8
+
+  optimizer: sgd
+  learning_rate: 0.01
+  sgd_momentum: 0.9
+  sgd_dampening: 0.9
+  weight_decay: 0.001
+
+  lr_decay_step: 600000
+  lr_scheduler: cosine_warmup
+  lr_warmup_steps: 10000
 
 multimodal:
   image:
@@ -20,7 +35,7 @@ multimodal:
     dataset: pe
     ckpt_path: ckpts/penet_best.pth
     use_pretrained: False
-    img_feat_size: 2048
+    ct_feat_size: 2048
 
     # preprocessing
     abnormal_prob: 0.3
@@ -70,6 +85,7 @@ multimodal:
     num_classes: 1
     num_epochs: 20
     batch_size: 4
+    train_split: 0.8
 
     optimizer: sgd
     learning_rate: 0.01

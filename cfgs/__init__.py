@@ -1,1 +1,1 @@
-from .base_cfg import IMGCfg, EHRCfg
+from .base_cfg import CTCfg, EHRCfg
