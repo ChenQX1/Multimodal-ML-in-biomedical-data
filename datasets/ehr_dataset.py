@@ -12,6 +12,7 @@ import pickle
 class EHRDataset(Dataset):
     def __init__(self, args, phase) -> None:
         super(EHRDataset, self).__init__()
+        np.random.seed(args.rand_seed)
         self.phase = phase
         self.ehr_data, self.labels = self._load_ehr_data(args, phase)
         self.ehr_data = self.transform(self.ehr_data)
@@ -27,15 +28,12 @@ class EHRDataset(Dataset):
 
     def _load_ehr_data(self, args, phase):
         tb_ls = []
+        data_ls = []
+        for tb_ in os.listdir(args.data_dir):
+            if tb_.endswith('.csv'):
+                data_ls.append(tb_)
 
-        if args.dataset == 'all_ehr':
-            dataset = []
-            for tb_ in os.listdir(args.data_dir):
-                if tb_.endswith('.csv'):
-                    dataset.append(tb_)
-            args.dataset = dataset
-
-        for tb_ in args.dataset:
+        for tb_ in data_ls:
             tmp_tb = pd.read_csv(os.path.join(args.data_dir, tb_)).groupby('idx').last()
             if 'Unnamed: 0' in tmp_tb.columns:
                 tmp_tb = tmp_tb.drop('Unnamed: 0', axis=1, inplace=False)
@@ -48,12 +46,19 @@ class EHRDataset(Dataset):
 
         ans = pd.concat(tb_ls, axis=1)
         ans = ans.loc[:, ~ans.columns.duplicated()].drop('pe_type', axis=1)
+
+        indices = np.arange(len(ans))
+        np.random.shuffle(indices)
+        pivot = int(args.train_split * len(ans))
+        if phase == 'train':
+            ans = ans.iloc[:pivot, :]
+        elif phase == 'val':
+            ans = ans.iloc[pivot:, :]
+
         labels = ans[['label']].astype('float32')
         dt = ans.drop('label', axis=1).astype('float32')
 
         return dt, labels
-
-
 
     def transform(self, X: pd.DataFrame):
         if(self.phase == 'train'):

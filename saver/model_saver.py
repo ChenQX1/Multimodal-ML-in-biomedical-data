@@ -87,26 +87,24 @@ class ModelSaver(object):
             os.remove(oldest_ckpt)
 
     @classmethod
-    def load_model(cls, ckpt_path, gpu_ids=None, joint_training=False):
+    def load_model(cls, ckpt_path: str, gpu_ids=None):
         """Load model parameters from disk.
 
         Args:
             ckpt_path: Path to checkpoint to load.
-            gpu_ids: GPU IDs for DataParallel.
+            gpu_ids: GPU IDs for DataParallel.  ! this argument is deprecated
 
         Returns:
             Model loaded from checkpoint, dict of additional checkpoint info (e.g. epoch, metric).
         """
         ckpt_dict = torch.load(ckpt_path, map_location=torch.device('cpu'))
 
-        if not joint_training:
-            try:
-                model_fn = models.__dict__[ckpt_dict['model_name']]
-            except:
-                # model_fn = models.__dict__["PENetClassifier"]
-                raise ValueError("Wrong model name!")
-        else:
-            model_fn = models.__dict__['PEElasticNet']
+        try:
+            model_fn = models.__dict__[ckpt_dict['model_name']]
+        except:
+            # model_fn = models.__dict__["PENetClassifier"]
+            raise ValueError("Wrong model name!")
+
         model_args = ckpt_dict['model_args']
         model = model_fn(**model_args)
         model.load_state_dict(ckpt_dict['model_state'])

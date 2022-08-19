@@ -14,7 +14,7 @@ from evaluator import ModelEvaluator
 from logger import TrainLogger
 from saver import ModelSaver
 from datasets.ehr_dataset import EHRDataset
-from models.pe_elastic_net import ElasticNet
+from models.elastic_net import ElasticNet
 
 
 def fit_multimodal(parser: CfgParser):
@@ -25,7 +25,7 @@ def fit_multimodal(parser: CfgParser):
     # PENet
     # Get the model
     if cfgs_ct.ckpt_path and not cfgs_ct.use_pretrained:
-        model_penet, ckpt_info_penet = ModelSaver.load_model(cfgs_ct.ckpt_path, joint_training=True)
+        model_penet, ckpt_info_penet = ModelSaver.load_model(cfgs_ct.ckpt_path)
         cfgs_ct.start_epoch = ckpt_info_penet['epoch'] + 1
     else:
         model_fn = models.__dict__[cfgs_ct.model]
@@ -61,7 +61,7 @@ def fit_multimodal(parser: CfgParser):
     if parser.train_img:
         train_penet(cfgs_ct, logger, loader_train_ct, model_penet,
                     cls_loss_fn_penet, optimizer_penet, lr_scheduler_penet, evaluator, saver_penet)
-    ct_feat_size = cfgs_ct.ct_feat_size
+    ct_feat_size = cfgs_ct.feat_size
 
     # EHR
     dt_train_ehr = EHRDataset(cfgs_ehr, phase='train')

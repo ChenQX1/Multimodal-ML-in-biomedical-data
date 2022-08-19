@@ -1,27 +1,34 @@
 from dataclasses import dataclass
+from typing import List, Union
 
 
 @dataclass
 class CommonCfg(object):
-    name = None  # required
-    is_training = None
-    toy = False
-    toy_size = 5
-    cudnn_benchmark = False
-    data_dir = None
-    gpu_ids = -1
+    name: str # required
+    is_training: bool = False
+    cudnn_benchmark: bool = False
+    gpu_ids: Union[int, List[int], str] = -1    # `-1` for cpu; `mps` for MPS backend
     rand_seed = 42
-    save_dir = None
-    resutls_dir = None
+    data_dir: str = 'data'
+    save_dir: str = 'logs'
+    resutls_dir: str = 'results'
+    ckpt_path: str = 'ckpts'
+    use_pretrained: bool = False
 
-    num_epochs = 1
-    num_workers = 4
+    num_epochs: int = 1
+    num_workers: int = 4
+    batch_size: int = 8
+    num_classes: int = 1
 
+    optimizer: str = 'sgd'
+    learning_rate: int = 0.001
 
 # Write fundamental configurations in the class.
 # Usually these cfgs do not change.
 @dataclass
 class CTCfg(CommonCfg):
+    toy: bool = False
+    toy_size: int = 5
     series = 'sagittal'
     pe_types = ['central', 'segmental']
     hide_probability = 0
@@ -71,25 +78,17 @@ class CTCfg(CommonCfg):
     eval_mode = 'series'
     do_classify = False
     num_visuals = 4
-
     visualize_all = False
 
 
 @dataclass
 class EHRCfg(CommonCfg):
     dataset = None
-    ckpt_path = None
-
-    num_classes = 1
-    batch_size = 16
-    num_epochs = 1
-
+    # optimizer
     optimizer = 'sgd'
     learning_rate = 0.01
-    # SGD
     sgd_momentum = 0.9
     sdg_dampening = 0.9
-    # Adam
     adam_beta_1 = 0.9
     adam_beta_2 = 0.999
     # Regularization

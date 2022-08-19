@@ -178,3 +178,16 @@ class PENetClassifier(nn.Module):
                        .format(sum(1 for _ in gen_params(fine_tuning_boundary, fine_tuning=False))))
 
         return optimizer_parameters
+
+    def forward_feature(self, x):
+        # Expand input (allows pre-training on RGB videos, fine-tuning on Hounsfield Units)
+        if x.size(1) < self.num_channels:
+            x = x.expand(-1, self.num_channels // x.size(1), -1, -1, -1)
+        x = self.in_conv(x)
+        x = self.max_pool(x)
+
+        # Encoders
+        for encoder in self.encoders:
+            x = encoder(x)
+
+        return x

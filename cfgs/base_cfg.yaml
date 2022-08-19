@@ -1,23 +1,91 @@
-# Common
-name: experiment
+name: radfusion_PENetElasticNet   # recommended name: `task name` + `model name`
+phase: train
 
-joint_config:
+common:
   gpu_ids: 0
   cudnn_benchmark: False
   rand_seed: 42
-
-  ckpt_path:
-  data_dir: data
-  save_dir: logs
-  results_dir: results
-
   train_img: False
   train_ehr: False
   joint_training: True
 
-  model: PENetElasticNet
-  num_epochs: 1
+  data_dir: data
+  save_dir: logs
+  results_dir: results
+
+  ckpt_path:
+  use_pretrained: False
+  num_epochs: 20
+  num_classes: 1
   num_workers: 8
+
+  optimizer: sgd
+  learning_rate: 0.01
+  sgd_momentum: 0.9
+  sgd_dampening: 0.9
+  weight_decay: 0.001
+  # log
+  num_visual: 8
+  epochs_per_eval: 1
+  epochs_per_save: 1
+  iters_per_print: 8
+  iters_per_visual: 8000
+  max_ckpts: 2
+  best_ckpt_metric: val_AUROC
+
+joint:
+  # task
+  # when ckpt_path is not `None`, use it directly
+  # otherwise, try to load the submodels' ckpt individually.
+  model: PENetElasticNet
+  ckpt_path:
+  dataset: MultimodalDataset
+  use_pretrained: False
+  num_epochs: 20
+  num_workers: 8
+  num_classes: 1
+  # optimizer
+  optimizer: sgd
+  learning_rate: 0.01
+  sgd_momentum: 0.9
+  sgd_dampening: 0.9
+  weight_decay: 0.001
+  # scheduler
+  lr_decay_step: 600000
+  lr_scheduler: cosine_warmup
+  lr_warmup_steps: 10000
+  # log
+  num_visual: 8
+  epochs_per_eval: 1
+  epochs_per_save: 1
+  iters_per_print: 8
+  iters_per_visual: 8000
+  max_ckpts: 2
+  best_ckpt_metric: val_AUROC
+ct:
+  model: PEElasticNet
+  dataset: pe
+  ckpt_path: ckpts/penet_best.pth
+  use_pretrained: False
+  feat_size: 2048
+  # preprocessing
+  abnormal_prob: 0.3
+  include_normals: True
+  agg_method: max
+  crop_shape: [192, 192]
+  resize_shape: [208, 208]
+  num_workers: 8
+
+  pe_types: [central, segmental]
+  use_hem: False
+  do_classify: True
+
+  # model definition    
+  model_depth: 50
+  num_classes: 1
+  num_epochs: 1
+  num_slices: 24
+  batch_size: 8
 
   optimizer: sgd
   learning_rate: 0.01
@@ -28,72 +96,31 @@ joint_config:
   lr_decay_step: 600000
   lr_scheduler: cosine_warmup
   lr_warmup_steps: 10000
+  # post processing
+  fine_tune: True
+  fine_tuning_boundary: calssifier
+  fine_tuning_lr: 0.01
 
-multimodal:
-  image:
-    model: PEElasticNet
-    dataset: pe
-    ckpt_path: ckpts/penet_best.pth
-    use_pretrained: False
-    ct_feat_size: 2048
+ehr:
+  model: ElasticNet
+  data_dir: data/full_ehr
+  dataset: EHRDataset
+  ckpt_path: ckpts/elastic_net.pth
+  use_pretrained: False
+  feat_size: 500
 
-    # preprocessing
-    abnormal_prob: 0.3
-    include_normals: True
-    agg_method: max
-    best_ckpt_metric: val_AUROC
-    crop_shape: [192, 192]
-    resize_shape: [208, 208]
-    num_workers: 8
+  num_classes: 1
+  num_epochs: 10
+  batch_size: 128
+  train_split: 0.7
 
-    pe_types: [central, segmental]
-    use_hem: False
-    do_classify: True
+  optimizer: sgd
+  learning_rate: 0.01
+  sgd_momentum: 0.9
+  sgd_dampening: 0.9
 
-    # model definition    
-    model_depth: 50
-    num_classes: 1
-    num_epochs: 1
-    num_slices: 24
-    batch_size: 8
-
-    optimizer: sgd
-    learning_rate: 0.01
-    sgd_momentum: 0.9
-    sgd_dampening: 0.9
-    weight_decay: 0.001
-
-    lr_decay_step: 600000
-    lr_scheduler: cosine_warmup
-    lr_warmup_steps: 10000
-    # log
-    num_visual: 8
-    epochs_per_eval: 1
-    epochs_per_save: 1
-    iters_per_print: 8
-    iters_per_visual: 8000
-    # post processing
-    fine_tune: True
-    fine_tuning_boundary: calssifier
-    fine_tuning_lr: 0.01
-
-  EHR:
-    model: ElasticNet
-    dataset: all_ehr
-    ckpt_path: ckpts/elastic_net.pth
-
-    num_classes: 1
-    num_epochs: 20
-    batch_size: 4
-    train_split: 0.8
-
-    optimizer: sgd
-    learning_rate: 0.01
-    sgd_momentum: 0.9
-    sgd_dampening: 0.9
-
-    weight_decay: 0.001
-    l1_ratio: 0.1
-    alpha: 0
-    n_early_stopping: -1
+  weight_decay: 0.001
+  l1_ratio: 0.1
+  alpha: 0
+  n_early_stopping: -1
 

@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from args.cfg_parser import CfgParser
 from datasets.ehr_dataset import EHRDataset
-from models.pe_elastic_net import ElasticNet
+from models.elastic_net import ElasticNet
 import util
 
 from data_loader import CTDataLoader
