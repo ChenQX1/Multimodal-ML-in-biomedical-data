@@ -14,28 +14,21 @@ class MultimodalLoader(DataLoader):
         "Not implemented loader type: {parser.ct_modal.loader}"
 
         self.dataset: MultimodalDataset = MultimodalDataset(parser, phase=phase, is_training=is_training)
-        self.batch_size = min(
-            parser.cfgs_ct.batch_size, parser.cfgs_ehr.batch_size
-        )
+        self.batch_size = parser.cfgs_joint.batch_size
+        # self.batch_size = min(
+        #     parser.cfgs_ct.batch_size, parser.cfgs_ehr.batch_size
+        # )
         self.phase = phase
 
         params = {
             'dataset': self.dataset,
             'batch_size': self.batch_size,
-            'num_workers': parser.num_workers,
+            'num_workers': parser.cfgs_joint.num_workers,
             'drop_last': True,
-            'prefetch_factor': 2,
-            'pin_memory': True
+            'prefetch_factor': 4,
+            'pin_memory': True,
+            'shuffle': is_training
         }
-        if self.phase == 'train':
-            params.update(
-                {'sampler': DistributedSampler(
-                    dataset=self.dataset, shuffle=True, seed=parser.rand_seed)}
-            )
-        else:
-            params.update(
-                {'shuffle': is_training}
-            )
         super(MultimodalLoader, self).__init__(**params)
 
     def get_series_label(self, series_idx):

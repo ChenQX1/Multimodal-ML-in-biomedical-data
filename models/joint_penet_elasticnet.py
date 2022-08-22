@@ -1,41 +1,16 @@
 import torch
 import torch.nn as nn
 
-"""
-How to use the module:
-model = BaseJointModel()
-dataloader = MultimodalLoder()
-batch = (ct_volume, ehr_feat, target)
-
-when training sub-models individually:
-optimizer = optimizer_fn(model.penet.parameters())
-preds = model.penet(batch[0])
-loss = criterion(preds, batch[2])
-optimizer.zero_grad()
-loss.backward()
-optimizer.step()
-...
-
-when training jointly:
-optimizer = optimizer_fn(model.parameters())
-preds = model(batch[0], batch[1])
-loss = criterion(preds, batch[2])
-optimizer.zero_grad()
-loss.backward()
-optimizer.step()
-
-For compatibility with the original PENet project,
-we save and load submodels parameters indivisually.
-"""
 
 class PENetElasticNet(nn.Module):
     def __init__(
         self,
-        subnet_ct: nn.Module,
-        subnet_ehr: nn.Module,
-        shim_ct: nn.Module,
-        shim_ehr: nn.Module,
-        classifier_head: nn.Module) -> None:
+        subnet_ct: nn.Module = None,
+        subnet_ehr: nn.Module = None,
+        shim_ct: nn.Module = None,
+        shim_ehr: nn.Module = None,
+        classifier_head: nn.Module = None) -> None:
+        super(PENetElasticNet, self).__init__()
 
         self.subnet_ct = subnet_ct
         self.subnet_ehr = subnet_ehr
@@ -53,6 +28,16 @@ class PENetElasticNet(nn.Module):
             feat_ehr = self.shim_ehr(feat_ehr)
         joint_input = torch.concat([feat_ct, feat_ehr], dim=1)
         outputs = self.classifier_head(joint_input)
-
+        
         return outputs
     
+    def args_dict(self):
+        model_args = {
+            'subnet_ct': self.subnet_ct,
+            'subnet_ehr': self.subnet_ehr,
+            'shim_ct': self.shim_ct,
+            'shim_ehr': self.shim_ehr,
+            'classifier_head': self.classifier_head
+        }
+
+        return model_args

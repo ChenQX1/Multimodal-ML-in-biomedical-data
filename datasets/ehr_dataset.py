@@ -10,8 +10,9 @@ from sklearn.preprocessing import StandardScaler
 import pickle
 
 class EHRDataset(Dataset):
-    def __init__(self, args, phase) -> None:
+    def __init__(self, args, phase, joint_training=False) -> None:
         super(EHRDataset, self).__init__()
+        self.joint_training = joint_training
         np.random.seed(args.rand_seed)
         self.phase = phase
         self.ehr_data, self.labels = self._load_ehr_data(args, phase)
@@ -36,24 +37,13 @@ class EHRDataset(Dataset):
         for tb_ in data_ls:
             tmp_tb = pd.read_csv(os.path.join(args.data_dir, tb_)).groupby('idx').last()
             if 'Unnamed: 0' in tmp_tb.columns:
+                tmp_tb: pd.DataFrame
                 tmp_tb = tmp_tb.drop('Unnamed: 0', axis=1, inplace=False)
-
-            if phase != 'test':
-                tmp_tb = tmp_tb[tmp_tb.split != 'test'].drop('split', axis=1)
-            else:
-                tmp_tb = tmp_tb[tmp_tb.split == 'test'].drop('split', axis=1)
+            tmp_tb = tmp_tb[tmp_tb.split == phase].drop('split', axis=1)
             tb_ls.append(tmp_tb)
 
         ans = pd.concat(tb_ls, axis=1)
         ans = ans.loc[:, ~ans.columns.duplicated()].drop('pe_type', axis=1)
-
-        indices = np.arange(len(ans))
-        np.random.shuffle(indices)
-        pivot = int(args.train_split * len(ans))
-        if phase == 'train':
-            ans = ans.iloc[:pivot, :]
-        elif phase == 'val':
-            ans = ans.iloc[pivot:, :]
 
         labels = ans[['label']].astype('float32')
         dt = ans.drop('label', axis=1).astype('float32')
@@ -61,7 +51,7 @@ class EHRDataset(Dataset):
         return dt, labels
 
     def transform(self, X: pd.DataFrame):
-        if(self.phase == 'train'):
+        if self.phase == 'train':
             drop_col = X.columns[X.nunique() == 1]
             # remove zero variance featurs
             X = X.drop(drop_col, axis=1)

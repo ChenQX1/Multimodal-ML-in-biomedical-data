@@ -56,6 +56,7 @@ class ModelSaver(object):
             ckpt_dict = {
                 'ckpt_info': {'epoch': epoch, self.metric_name: metric_val},
                 'model_name': model.__class__.__name__,
+                'model_args': model.args_dict(),
                 'model_state': model.state_dict(),
                 'optimizer': optimizer.state_dict(),
             }

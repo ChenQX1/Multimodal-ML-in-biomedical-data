@@ -26,7 +26,8 @@ def train(args):
 
     # Get optimizer and scheduler
     if args.use_pretrained or args.fine_tune:
-        parameters = model.module.fine_tuning_parameters(args.fine_tuning_boundary, args.fine_tuning_lr)
+        parameters = model.module.fine_tuning_parameters(
+            args.fine_tuning_boundary, args.fine_tuning_lr)
     else:
         parameters = model.parameters()
     optimizer = util.get_optimizer(parameters, args)
@@ -35,14 +36,17 @@ def train(args):
         ModelSaver.load_optimizer(args.ckpt_path, optimizer, lr_scheduler)
 
     # Get logger, evaluator, saver
-    cls_loss_fn = util.get_loss_fn(is_classification=True, dataset=args.dataset, size_average=False)
+    cls_loss_fn = util.get_loss_fn(
+        is_classification=True, dataset=args.dataset, size_average=False)
     data_loader_fn = data_loader.__dict__[args.data_loader]
     train_loader = data_loader_fn(args, phase='train', is_training=True)
-    logger = TrainLogger(args, len(train_loader.dataset), train_loader.dataset.pixel_dict)
+    logger = TrainLogger(args, len(train_loader.dataset),
+                         train_loader.dataset.pixel_dict)
     eval_loaders = [data_loader_fn(args, phase='val', is_training=False)]
     evaluator = ModelEvaluator(args.do_classify, args.dataset, eval_loaders, logger,
                                args.agg_method, args.num_visuals, args.max_eval, args.epochs_per_eval)
-    saver = ModelSaver(args.save_dir, args.epochs_per_save, args.max_ckpts, args.best_ckpt_metric, args.maximize_metric)
+    saver = ModelSaver(args.save_dir, args.epochs_per_save,
+                       args.max_ckpts, args.best_ckpt_metric, args.maximize_metric)
 
     # Train model
     while not logger.is_finished_training():
@@ -58,7 +62,8 @@ def train(args):
                 cls_loss = cls_loss_fn(cls_logits, cls_targets.to(args.device))
                 loss = cls_loss.mean()
 
-                logger.log_iter(inputs, cls_logits, target_dict, cls_loss.mean(), optimizer)
+                logger.log_iter(inputs, cls_logits, target_dict,
+                                cls_loss.mean(), optimizer)
 
                 optimizer.zero_grad()
                 loss.backward()
@@ -71,7 +76,8 @@ def train(args):
         saver.save(logger.epoch, model, optimizer, lr_scheduler, args.device,
                    metric_val=metrics.get(args.best_ckpt_metric, None))
         logger.end_epoch(metrics, curves)
-        util.step_scheduler(lr_scheduler, metrics, epoch=logger.epoch, best_ckpt_metric=args.best_ckpt_metric)
+        util.step_scheduler(lr_scheduler, metrics, epoch=logger.epoch,
+                            best_ckpt_metric=args.best_ckpt_metric)
 
 
 if __name__ == '__main__':

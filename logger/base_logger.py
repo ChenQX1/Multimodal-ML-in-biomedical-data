@@ -27,7 +27,7 @@ class BaseLogger(object):
         self.num_visuals = args.num_visuals
         self.log_path = os.path.join(self.save_dir, '{}.log'.format(args.name))
         # log_dir = os.path.join('logs', args.name + '_' + datetime.now().strftime('%b%d_%H%M'))
-        log_dir = os.path.join(self.log_path, 'tensorboard_log')
+        log_dir = os.path.join(self.save_dir, 'tensorboard_log')
         self.summary_writer = SummaryWriter(log_dir=log_dir)
 
         self.epoch = args.start_epoch

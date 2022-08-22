@@ -14,7 +14,7 @@ class ModelEvaluator(object):
     """Class for evaluating a model during training."""
 
     def __init__(self, do_classify, dataset_name, data_loaders, logger,
-                 agg_method=None, num_visuals=None, max_eval=None, epochs_per_eval=1):
+                 agg_method=None, num_visuals=None, max_eval=None, epochs_per_eval=1, joint_training=False):
         """
         Args:
             do_classify: If True, evaluate classification metrics.
@@ -36,6 +36,7 @@ class ModelEvaluator(object):
         self.seg_loss_fn = util.optim_util.get_loss_fn(is_classification=False, dataset=dataset_name)
         self.num_visuals = num_visuals
         self.max_eval = None if max_eval is None or max_eval < 0 else max_eval
+        self.joint_training = joint_training
 
     def evaluate(self, model, device, epoch: int = None):
         """Evaluate a model at the end of the given epoch.
@@ -89,13 +90,20 @@ class ModelEvaluator(object):
         num_evaluated = num_visualized = 0
         start_visual = random.randint(0, max(1, num_examples - self.num_visuals))
         with tqdm(total=num_examples, unit=' ' + phase) as progress_bar:
-            for inputs, targets_dict in data_loader:
+            for batch in data_loader:
                 if num_evaluated >= num_examples:
                     break
                 with torch.no_grad():
-                    cls_logits = model.forward(inputs.to(device))
-                    cls_targets = targets_dict['is_abnormal']
-                    loss = self.cls_loss_fn(cls_logits, cls_targets.to(device))
+                    if self.joint_training:
+                        ct_input, ehr_input, targets_dict = batch
+                        cls_logits = model(ct_input.to(device), ehr_input.to(device))
+                        cls_targets = targets_dict['is_abnormal']
+                        loss = self.cls_loss_fn(cls_logits, cls_targets.to(device))
+                    else:
+                        inputs, targets_dict = batch
+                        cls_logits = model.forward(inputs.to(device))
+                        cls_targets = targets_dict['is_abnormal']
+                        loss = self.cls_loss_fn(cls_logits, cls_targets.to(device))
                 self._record_batch(cls_logits, targets_dict['series_idx'], loss, **records)
 
                 if start_visual <= num_evaluated and num_visualized < self.num_visuals and phase != 'train':

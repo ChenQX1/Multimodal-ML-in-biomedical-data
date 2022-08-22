@@ -62,10 +62,11 @@ class CfgParser(object):
             cfgs.gpu_ids = []
         elif isinstance(cfgs.gpu_ids, int):
             cfgs.gpu_ids = [cfgs.gpu_ids]
+        
         if len(cfgs.gpu_ids) > 0 and torch.cuda.is_available():
             cfgs.device =f'cuda:{cfgs.gpu_ids[0]}'
             cudnn.benchmark = cfgs.cudnn_benchmark
-        elif cfgs.gpu_ids == 'mps':
+        elif len(cfgs.gpu_ids) > 0 and torch.backends.mps.is_available():
             cfgs.device = 'mps'
         else:
             cfgs.device = 'cpu'

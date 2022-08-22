@@ -14,7 +14,7 @@ from evaluator import ModelEvaluator
 from logger import TrainLogger
 from saver import ModelSaver
 from datasets.ehr_dataset import EHRDataset
-from models.elastic_net import ElasticNet
+from models.elasticnet import ElasticNet
 
 
 def fit_multimodal(parser: CfgParser):
