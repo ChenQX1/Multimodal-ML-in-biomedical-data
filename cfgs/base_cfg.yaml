@@ -5,7 +5,7 @@ phase: train
 common:
   # on macOS, if gpu_ids = 0 and mps.is_available
   # torch will use `mps`
-  gpu_ids: 0
+  gpu_ids: -1
   cudnn_benchmark: False
   rand_seed: 42
   joint_training: True
@@ -35,7 +35,7 @@ joint:
   # task
   # when ckpt_path is not `None`, use it directly
   # otherwise, try to load the submodels' ckpt individually.
-  model: PENetElasticNet
+  model: FusionModel
   ckpt_path:
   dataset: MultimodalDataset
   use_pretrained: False
@@ -60,7 +60,7 @@ joint:
   max_ckpts: 2
   best_ckpt_metric: val_AUROC
 ct:
-  model: PEElasticNet
+  model: PENetClassifier
   dataset: pe
   phase: all
   ckpt_path: ckpts/penet_best.pth
@@ -107,7 +107,7 @@ ehr:
   feat_size: 200
 
   num_classes: 1
-  num_epochs: 50
+  num_epochs: 25
   batch_size: 128
   train_split: 0.7
 
@@ -115,9 +115,8 @@ ehr:
   learning_rate: 0.01
   sgd_momentum: 0.9
   sgd_dampening: 0.9
-
+  
   weight_decay: 0.001
   l1_ratio: 0.1
   alpha: 0
   n_early_stopping: -1
-

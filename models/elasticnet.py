@@ -38,26 +38,3 @@ class ElasticNet(nn.Module):
 
     def args_dict(self):
         return self.model_args
-
-
-class PEElasticNet(PENetClassifier):
-    def __init__(self, model_depth=50, cardinality=32, num_channels=3, num_classes=600, init_method=None, **kwargs):
-        super(PEElasticNet, self).__init__(model_depth, cardinality,
-                                           num_channels, num_classes, init_method, **kwargs)
-        self.joint_pool = nn.AdaptiveAvgPool3d(1)
-
-    def forward_feature(self, x):
-        # Expand input (allows pre-training on RGB videos, fine-tuning on Hounsfield Units)
-        if x.size(1) < self.num_channels:
-            x = x.expand(-1, self.num_channels // x.size(1), -1, -1, -1)
-        x = self.in_conv(x)
-        x = self.max_pool(x)
-
-        # Encoders
-        for encoder in self.encoders:
-            x = encoder(x)
-
-        x = self.joint_pool(x)
-        x = x.view(x.size(0), -1)
-
-        return x

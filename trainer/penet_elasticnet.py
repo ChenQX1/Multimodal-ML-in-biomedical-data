@@ -1,11 +1,10 @@
 import os
 import sys
-sys.path.insert(0, os.path.abspath('./'))
-from logger.test_logger import TestLogger
+sys.path.insert(0, os.getcwd())
 import util
 from data_loader import MultimodalLoader
 from saver.model_saver import ModelSaver
-from models.joint_penet_elasticnet import PENetElasticNet
+from models import FusionModel
 from logger.train_logger import TrainLogger
 from args.cfg_parser import CfgParser
 from collections import defaultdict
@@ -15,16 +14,12 @@ from time import time
 from typing import Dict
 import torch
 import torch.nn as nn
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel as DDP
 from tqdm import tqdm
 import numpy as np
-from torch.profiler import profile, record_function, ProfilerActivity
 import sklearn.metrics as sk_metrics
 from PIL import Image
 
 from evaluator.model_evaluator import ModelEvaluator
-from logger.test_logger import TestLogger
 
 
 def train(parser: CfgParser):
@@ -54,7 +49,7 @@ def train(parser: CfgParser):
             nn.Linear(cfgs_ct.feat_size +
                       cfgs_ehr.feat_size, cfgs_joint.num_classes)
         )
-        model = PENetElasticNet(
+        model = FusionModel(
             subnet_ct,
             subnet_ehr,
             shim_ct,

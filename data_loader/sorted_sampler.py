@@ -1,6 +1,5 @@
 from torch.utils.data.sampler import Sampler
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
-from torch.utils.data.distributed import DistributedSampler
 
 
 class SortedSampler(Sampler):

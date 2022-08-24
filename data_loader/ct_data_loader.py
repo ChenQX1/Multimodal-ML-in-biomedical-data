@@ -1,7 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
-from torch.utils.data.distributed import DistributedSampler
 
 import datasets
 from .padded_inputs import PaddedInputs
@@ -34,15 +33,12 @@ class CTDataLoader(DataLoader):
             tmp_params = {
                 'dataset': dataset,
                 'batch_size': args.batch_size,
+                'shuffle': is_training,
                 'num_workers': args.num_workers,
                 'drop_last': True,
                 'prefetch_factor': 2,
                 'pin_memory': True
             }
-            if phase == 'train':
-                tmp_params.update({'sampler': DistributedSampler(dataset, shuffle=is_training)})
-            else:
-                tmp_params.update({'shuffle': is_training})
             super(CTDataLoader, self).__init__(**tmp_params)
         else:
             raise NotImplementedError('Invalid args.loader: {}'.format(args.loader))

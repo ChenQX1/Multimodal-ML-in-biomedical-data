@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath('./'))   # !!
 
 from args.cfg_parser import CfgParser
 from datasets.ehr_dataset import EHRDataset
-from models import ElasticNet
+from models import TabNet
 from saver.model_saver import ModelSaver
 import util
 
@@ -26,8 +26,9 @@ def train(parser: CfgParser):
     dataloader_val = DataLoader(
         data_val, cfgs_ehr.batch_size, sampler=data_val.ehr_data.index.values, drop_last=True)
     # ------------- Model ---------------
-    model = ElasticNet(
-        in_feats=data_train.ehr_data.shape[1], out_feats=cfgs_ehr.num_classes)
+    n_in = data_train.ehr_data.shape[1]
+    model = TabNet(n_in, cfgs_ehr.num_classes, n_d=64, n_a=64,
+                   n_shared=4, n_ind=4, n_steps=5, relax=1.2, vbs=128)
     model = model.to(device)
     # ------------- Training Loop ------------
     criterion = nn.BCEWithLogitsLoss(reduction='mean')
@@ -41,7 +42,7 @@ def train(parser: CfgParser):
         model.train()
         loss_batch = []
         for iter_n, (feat, target) in enumerate(dataloader_train):
-            preds = model(feat.to(device))
+            preds, _ = model(feat.to(device))
             loss = criterion(preds, target.to(device))
             optimizer.zero_grad()
             loss.backward()
@@ -54,16 +55,18 @@ def train(parser: CfgParser):
         with torch.no_grad():
             model.eval()
             loss_batch = [
-                criterion(model(feat.to(device)), target.to(
-                device)).detach().cpu().numpy() for feat, target in dataloader_val
+                criterion(model(feat.to(device))[0], target.to(
+                    device)).detach().cpu().numpy() for feat, target in dataloader_val
             ]
             loss_val.append(np.mean(loss_batch))
         # -------- Saving ckpts ----------------
-        print(f'    epoch {i} training loss:    {loss_train[-1]}, val loss:     {loss_val[-1]}')
+        print(
+            f'    epoch {i} training loss:    {loss_train[-1]}, val loss:     {loss_val[-1]}')
         if local_rank == 0:
             saver.save(
                 i, model, optimizer, None, device, metric_val=loss_val
             )
+
 
 def test(cfgs):
     pass
