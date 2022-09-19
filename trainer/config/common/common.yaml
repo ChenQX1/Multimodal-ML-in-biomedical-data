@@ -1,0 +1,26 @@
+# Common settings
+gpu_ids: -1
+cudnn_benchmark: True
+rand_seed: 42
+data_dir: data
+save_dir: logs
+results_dir: results
+img_format: raw
+do_classify: True
+# Task
+num_epochs: 1
+num_classes: 1
+num_workers: 4
+batch_size: 8
+# Log
+num_visuals: 8
+epochs_per_eval: 1
+epochs_per_save: 1
+iters_per_print: 8
+iters_per_visual: 8000
+max_ckpts: 2
+start_epoch: 0
+# evaluation
+best_ckpt_metric: val_AUROC
+max_eval: 1
+agg_method: max

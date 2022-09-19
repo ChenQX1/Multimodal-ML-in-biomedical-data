@@ -1,0 +1,7 @@
+defaults:
+  - penet@ct
+  - elasticnet@ehr
+
+model: FusionModel
+ckpt_path: ckpts/fusion_model.pth
+use_pretrained: False

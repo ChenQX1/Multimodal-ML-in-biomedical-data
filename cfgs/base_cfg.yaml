@@ -64,26 +64,25 @@ ct:
   dataset: pe
   phase: all
   ckpt_path: ckpts/penet_best.pth
-  use_pretrained: False
+  use_pretrained: False # for training PENet seperately
   feat_size: 2048
+  agg_method: max
+  do_classify: True
   # preprocessing
   abnormal_prob: 0.3
   include_normals: True
-  agg_method: max
+  num_slices: 24 
   crop_shape: [192, 192]
   resize_shape: [208, 208]
-
   pe_types: [central, segmental]
   use_hem: False
-  do_classify: True
+  
 
   # model definition    
   model_depth: 50
   num_classes: 1
   num_epochs: 1
-  num_slices: 24
   batch_size: 8
-
   optimizer: sgd
   learning_rate: 0.01
   sgd_momentum: 0.9
@@ -93,7 +92,7 @@ ct:
   lr_decay_step: 600000
   lr_scheduler: cosine_warmup
   lr_warmup_steps: 10000
-  # post processing
+  # transfering from Knetics model
   fine_tune: True
   fine_tuning_boundary: calssifier
   fine_tuning_lr: 0.01
@@ -108,7 +107,7 @@ ehr:
 
   num_classes: 1
   num_epochs: 25
-  batch_size: 128
+  batch_size: 64
   train_split: 0.7
 
   optimizer: sgd

@@ -14,7 +14,7 @@ class ModelEvaluator(object):
     """Class for evaluating a model during training."""
 
     def __init__(self, do_classify, dataset_name, data_loaders, logger,
-                 agg_method=None, num_visuals=None, max_eval=None, epochs_per_eval=1, joint_training=False):
+                 agg_method=None, num_visuals=None, max_eval=None, epochs_per_eval=1, do_fusion=False):
         """
         Args:
             do_classify: If True, evaluate classification metrics.
@@ -36,7 +36,7 @@ class ModelEvaluator(object):
         self.seg_loss_fn = util.optim_util.get_loss_fn(is_classification=False, dataset=dataset_name)
         self.num_visuals = num_visuals
         self.max_eval = None if max_eval is None or max_eval < 0 else max_eval
-        self.joint_training = joint_training
+        self.do_fusion = do_fusion
 
     def evaluate(self, model, device, epoch: int = None):
         """Evaluate a model at the end of the given epoch.
@@ -94,7 +94,7 @@ class ModelEvaluator(object):
                 if num_evaluated >= num_examples:
                     break
                 with torch.no_grad():
-                    if self.joint_training:
+                    if self.do_fusion:
                         ct_input, ehr_input, targets_dict = batch
                         cls_logits = model(ct_input.to(device), ehr_input.to(device))
                         cls_targets = targets_dict['is_abnormal']

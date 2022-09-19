@@ -10,9 +10,8 @@ from sklearn.preprocessing import StandardScaler
 import pickle
 
 class EHRDataset(Dataset):
-    def __init__(self, args, phase, joint_training=False) -> None:
+    def __init__(self, args, phase) -> None:
         super(EHRDataset, self).__init__()
-        self.joint_training = joint_training
         np.random.seed(args.rand_seed)
         self.phase = phase
         self.ehr_data, self.labels = self._load_ehr_data(args, phase)

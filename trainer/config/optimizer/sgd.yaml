@@ -1,0 +1,5 @@
+optimizer: sgd
+learning_rate: 0.01
+sgd_momentum: 0.9
+sgd_dampening: 0.9
+weight_decay: 0.001

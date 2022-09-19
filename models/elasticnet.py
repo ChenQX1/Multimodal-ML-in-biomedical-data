@@ -31,10 +31,10 @@ class ElasticNet(nn.Module):
         return x
 
     def l1_reg(self):
-        return self.backbone[0].weight.abs().sum() + self.backbone[2].weight.abs().sum()
+        return self.backbone[0].weight.abs().sum()
 
     def l2_reg(self):
-        return self.backbone[0].weight.pow(2).sum() + self.backbone[2].weight.pow(2).sum()
+        return self.backbone[0].weight.pow(2).sum()
 
     def args_dict(self):
         return self.model_args

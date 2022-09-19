@@ -29,6 +29,8 @@ class CommonCfg(object):
 class CTCfg(CommonCfg):
     toy: bool = False
     toy_size: int = 5
+    patience = 10
+
     series = 'sagittal'
     pe_types = ['central', 'segmental']
     hide_probability = 0
@@ -38,9 +40,7 @@ class CTCfg(CommonCfg):
     img_format = 'raw'
     dataset = None     # required
     patience = 10
-    best_ckpt_metric = 'val_loss'
     max_eval = -1
-    max_ckpts = 2
 
     use_pretrained = False
     include_normals = False
@@ -48,7 +48,7 @@ class CTCfg(CommonCfg):
     fine_tune = True
     fine_tuning_lr = 0
     fine_tuning_boundary = 'encoder.3'
-    hidden_dim = 32
+    hidden_dim = 32                 # LSTM hidden state size (LRCN only)
     elastic_transform = False
     do_hflip = True
     do_vflip = False

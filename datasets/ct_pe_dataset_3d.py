@@ -23,7 +23,8 @@ class CTPEDataset3d(BaseCTDataset):
         super(CTPEDataset3d, self).__init__(args.data_dir, args.img_format, is_training_set=is_training_set)
         self.phase = phase
         self.resize_shape = args.resize_shape
-        self.is_test_mode = not args.is_training
+        # self.is_test_mode = not args.is_training
+        self.is_test_mode = not is_training_set
         self.pe_types = args.pe_types
 
         # Augmentation
