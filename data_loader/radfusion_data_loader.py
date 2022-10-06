@@ -20,7 +20,7 @@ class RadfusionDataLoader(DataLoader):
             'batch_size': cfgs.batch_size,
             'num_workers': cfgs.num_workers,
             'drop_last': True,
-            'prefetch_factor': 4,
+            'prefetch_factor': 2,
             'pin_memory': True,
             'shuffle': is_training
         }

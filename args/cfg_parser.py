@@ -176,6 +176,7 @@ class ConfigParser(object):
             date_string = datetime.datetime.now() .strftime("%Y%m%d_%H%M%S")
             cfgs.date_string = date_string
             cfgs.save_dir = '/'.join([cfgs.save_dir, f'{task_name}_{date_string}'])
+            os.makedirs(cfgs.save_dir, exist_ok=True)
             # device
             if cfgs.gpu_ids == -1:
                 cfgs.gpu_ids = []
@@ -197,7 +198,8 @@ class ConfigParser(object):
 
             cfgs.results_dir = os.path.join(
                 cfgs.results_dir, '{}_{}'.format(task_name, date_string))
-            os.makedirs(cfgs.results_dir, exist_ok=True)
+            if cfgs.phase == 'test':
+                os.makedirs(cfgs.results_dir, exist_ok=True)
 
             cfgs.maximize_metric = not cfgs.best_ckpt_metric.endswith('loss')
 

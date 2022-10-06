@@ -7,4 +7,4 @@
 . $HOME/anaconda3/etc/profile.d/conda.sh
 conda activate base
 
-torchrun --nproc_per_node=1 train_multimodal.py --cfg_file=base_cfg
+bash trainer/radfusion_fusionmodel.py

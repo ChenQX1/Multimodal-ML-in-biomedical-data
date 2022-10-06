@@ -26,6 +26,7 @@ class CTPEDataset3d(BaseCTDataset):
         # self.is_test_mode = not args.is_training
         self.is_test_mode = not is_training_set
         self.pe_types = args.pe_types
+        self.use_h5= args.use_h5
 
         # Augmentation
         self.crop_shape = args.crop_shape
@@ -193,8 +194,11 @@ class CTPEDataset3d(BaseCTDataset):
         if self.img_format == 'png':
             raise NotImplementedError('No support for PNGs in our HDF5 files.')
 
-        with h5py.File(os.path.join(self.data_dir, 'data.hdf5'), 'r') as hdf5_fh:
-            volume = hdf5_fh[str(ctpe.study_num)][start_idx:start_idx + self.num_slices]
+        if self.use_h5:
+            with h5py.File(os.path.join(self.data_dir, 'data.hdf5'), 'r') as hdf5_fh:
+                volume = hdf5_fh[str(ctpe.study_num)][start_idx:start_idx + self.num_slices]
+        else:
+            volume = np.load('/'.join([self.data_dir, f'{str(ctpe.study_num)}.npy']))[start_idx:start_idx + self.num_slices]
 
         return volume
 

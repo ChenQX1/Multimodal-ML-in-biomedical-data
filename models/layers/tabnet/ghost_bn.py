@@ -9,7 +9,8 @@ class GBN(nn.Module):
         self.vbs = vbs
 
     def forward(self, x):
-        chunk = torch.chunk(x, x.size(0) // self.vbs, 0)
+        chunk_size = x.size(0) // self.vbs
+        chunk = torch.chunk(x, chunk_size, 0)
         res = [self.bn(y) for y in chunk]
 
         return torch.concat(res, 0)

@@ -76,6 +76,7 @@ class BaseArgParser(object):
                                  help='If True, perform classification.')
         self.parser.add_argument('--pe_types', type=eval, default='["central", "segmental"]',
                                  help='Types of PE to include.')
+        self.parser.add_argument('--use_h5', type=bool, default=True, help='use the h5 file for training')
         self.is_training = None
 
     def parse_args(self):

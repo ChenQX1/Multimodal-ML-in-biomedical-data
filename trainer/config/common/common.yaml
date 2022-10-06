@@ -8,10 +8,10 @@ results_dir: results
 img_format: raw
 do_classify: True
 # Task
-num_epochs: 1
+num_epochs: 20
 num_classes: 1
 num_workers: 4
-batch_size: 8
+batch_size: 128
 # Log
 num_visuals: 8
 epochs_per_eval: 1

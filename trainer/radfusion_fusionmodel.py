@@ -23,11 +23,11 @@ from omegaconf import DictConfig, open_dict
 import hydra
 
 
-@hydra.main(config_path='config', config_name='base', version_base='1.2')
+@hydra.main(config_path='config', config_name='radfusion', version_base='1.2')
 def train(cfgs: DictConfig):
     with open_dict(cfgs):
         cfgs.common.is_training = True
-        cfgs.common.phase = 'test'
+        cfgs.common.phase = 'train'
     cfgs: DictConfig = ConfigParser(cfgs).cfgs
 
     local_rank = 0
@@ -62,6 +62,7 @@ def train(cfgs: DictConfig):
             classifier_head
         )
     model = model.to(device)
+    print(dataloader_train.dataset.ehr_data.ehr_data.shape)
 
     optimizer = util.get_optimizer(model.parameters(), args=cfgs.optimizer)
     # lr_schduler = util.get_scheduler(optimizer, parser)
@@ -80,14 +81,12 @@ def train(cfgs: DictConfig):
     # ----------- Traing Loop ----------
     print(f'Lenght of dataset: {len(dataloader_train.dataset)}')
     print(f'Number of iterations: {len(dataloader_train)}')
-    print(dataloader_train.dataset.ehr_data.ehr_data.shape)
     loss_train = []
     for i in range(cfgs.common.num_epochs):
         logger.start_epoch()
         model.train()
         loss_epoch = []
         t = tqdm(total=len(dataloader_train))
-        ts = time()
         for iter_n, (ct_input, ehr_input, target_dict) in enumerate(dataloader_train):
             logger.start_iter()
             target = target_dict['is_abnormal']
@@ -105,7 +104,6 @@ def train(cfgs: DictConfig):
             )
             t.update(1)
             logger.end_iter()
-        print(f'Time: {time() - ts} s')
         t.close()
 
         metrics, curves = evaluator.evaluate(model, device, logger.epoch)

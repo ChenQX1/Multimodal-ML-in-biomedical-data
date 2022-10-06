@@ -1,8 +1,0 @@
-defaults:
-  - dataset: radfusion
-  - model: fusion_model
-  - optimizer: sgd
-  - common: common
-
-name: task+model
-fusion: post    # leave it blank if training on single modal data.
