@@ -1,0 +1,10 @@
+model: MyViT
+n_patches: 8
+hidden_d: 1536   # (H / n_patches) ** 2 * num_slices  / 64
+h_heads: 24
+n_layers: 12
+k: 4    # scale multiplier
+drop_p: 0.1
+
+ckpt_path: ckpts/vit.pth
+use_pretrained: False

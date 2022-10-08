@@ -1,0 +1,10 @@
+model: TabNet
+ckpt_path: ckpts/tabnet.pth
+
+n_d: 32
+n_a: 32
+n_shared: 4
+n_ind: 4
+n_steps: 5
+relax: 1.2
+vbs: 64

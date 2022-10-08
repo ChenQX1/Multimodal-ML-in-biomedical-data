@@ -1,0 +1,8 @@
+defaults:
+    - dataset: radfusion_ct
+    - model: vit
+    - optimizer: sgd
+    - common: common
+
+name: ct_vit
+fusion: 

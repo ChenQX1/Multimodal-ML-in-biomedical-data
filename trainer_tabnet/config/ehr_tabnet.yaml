@@ -1,0 +1,8 @@
+defaults:
+  - dataset: radfusion_ehr
+  - model: tabnet
+  - optimizer: sgd
+  - common: common
+
+name: ehr_tabnet
+fusion: # leave it blank if training on single modal data.

@@ -1,0 +1,7 @@
+defaults:
+  - radfusion_ct@ct
+  - radfusion_ehr@ehr
+
+dataset: RadfusionDataset
+data_loader: RadfusionDataLoader
+multimodal: True

@@ -1,0 +1,3 @@
+model: ElasticNet
+ckpt_path: ckpts/elasticnet.pth
+feat_size: 2048     # the size of outputs of the backbone

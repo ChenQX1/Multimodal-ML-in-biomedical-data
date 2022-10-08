@@ -23,7 +23,6 @@ class RadfusionDataset(Dataset):
     def __len__(self):
         return len(self.ct_data.window_to_series_idx)
 
-
     def _get_data(self, args, **kwargs):
         dataset_fn = datasets.__dict__[args.dataset]
         return dataset_fn(args, **kwargs)

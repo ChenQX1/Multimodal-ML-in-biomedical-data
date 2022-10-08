@@ -1,0 +1,26 @@
+dataset: CTPEDataset3d
+pkl_path: data/series_list.pkl
+data_loader: CTDataLoader
+toy: False
+# phase: all
+abnormal_prob: 0.3
+include_normals: True
+num_slices: 96
+crop_shape:
+resize_shape: [512, 512]
+pe_types: [central, segmental]
+use_hem: False
+hide_probability: 0
+hide_level: window
+img_format: 'raw'
+use_h5: False
+series: 'sagittal'
+min_abnormal_slices: 4
+do_hflip: True
+do_vflip:  False
+do_rotate: True
+do_jitter: True
+do_center_pe: True
+threshold_size: 0
+only_topmost_window: False
+loader: window

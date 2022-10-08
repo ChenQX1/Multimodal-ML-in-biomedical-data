@@ -15,7 +15,8 @@ class TabNet(nn.Module):
             n_ind,
             n_steps,
             relax,
-            vbs
+            vbs,
+            **kwargs
             ) -> None:
         super().__init__()
 

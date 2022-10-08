@@ -1,0 +1,7 @@
+# training
+model: PENetClassifier
+ckpt_path: ckpts/penet_best.pth
+model_depth: 50
+feat_size: 2048     # the size of outputs of the backbone
+
+

@@ -21,6 +21,6 @@ iters_per_visual: 8000
 max_ckpts: 2
 start_epoch: 0
 # evaluation
-best_ckpt_metric: val_AUROC
+best_ckpt_metric: val_loss
 max_eval: 1
 agg_method: max
