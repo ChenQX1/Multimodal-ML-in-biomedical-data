@@ -1,7 +1,7 @@
 model: MyViT
 n_patches: 8
 hidden_d: 1536   # (H / n_patches) ** 2 * num_slices  / 64
-h_heads: 24
+h_heads: 12
 n_layers: 12
 k: 4    # scale multiplier
 drop_p: 0.1

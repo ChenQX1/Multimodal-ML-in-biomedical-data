@@ -14,6 +14,7 @@ from collections import defaultdict
 from args import ConfigParser
 from logger.train_logger import TrainLogger
 from models import MyViT
+import models
 from saver.model_saver import ModelSaver
 from data_loader import CTDataLoader
 import util
@@ -44,7 +45,7 @@ def train(cfgs: DictConfig):
         with open_dict(cfgs):
             cfgs.common.start_epoch = ckpt_info['epoch'] + 1
     else:
-        model = MyViT((cfgs.dataset.num_slices, *cfgs.dataset.resize_shape), cfgs.model.n_patches,
+        model = models.__dict__[cfgs.model.model]((cfgs.dataset.num_slices, *cfgs.dataset.resize_shape), cfgs.model.n_patches,
                     cfgs.model.hidden_d, cfgs.model.h_heads, cfgs.common.num_classes, cfgs.model.n_layers, cfgs.model.k, cfgs.model.drop_p)
     model = model.to(device)
 
@@ -56,19 +57,16 @@ def train(cfgs: DictConfig):
     saver = ModelSaver(cfgs.common.save_dir, cfgs.common.epochs_per_save,
                        cfgs.common.max_ckpts, cfgs.common.best_ckpt_metric, cfgs.common.maximize_metric)
     # ----------- Traing Loop ----------
-    print(f'The number of training samples: {len(dataloader_train.dataset)}')
-    print(f'The number of iterations: {len(dataloader_train)}')
     loss_train = []
     loss_val = []
     for i in range(cfgs.common.num_epochs):
+        ts = time()
         model.train()
         loss_epoch = []
-        t = tqdm(total=len(dataloader_train) + len(dataloader_val))
+        t = tqdm(total=len(dataloader_train) + len(dataloader_val), unit='batch')
         for iter_n, (ct_input, target_dict) in enumerate(dataloader_train):
             target = target_dict['is_abnormal']
-            st = time()
             cls_logits = model(ct_input.squeeze().to(device))
-            print(f'time per computing:     {time() - st}')
             loss = criterion(cls_logits, target.to(device))
             optimizer.zero_grad()
             loss.backward()
@@ -90,7 +88,7 @@ def train(cfgs: DictConfig):
         t.close()
 
         print(
-            f'    epoch {i} training loss:    {loss_train[-1]}, validation loss:  {loss_val[-1]}')
+            f'    epoch {i} training loss:    {loss_train[-1]}, validation loss:  {loss_val[-1]}, time: {time() - ts}')
         if local_rank == 0:
             saver.save(
                 i, model, optimizer, lr_schduler, device, metric_val=loss_val[-1])

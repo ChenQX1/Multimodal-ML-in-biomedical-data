@@ -1,5 +1,5 @@
 # Common settings
-gpu_ids: -1
+gpu_ids: 0
 cudnn_benchmark: True
 rand_seed: 42
 data_dir: data
@@ -8,10 +8,10 @@ results_dir: results
 img_format: raw
 do_classify: True
 # Task
-num_epochs: 20
+num_epochs: 50
 num_classes: 1
-num_workers: 4
-batch_size: 4
+num_workers: 8
+batch_size: 8
 # Log
 num_visuals: 8
 epochs_per_eval: 1

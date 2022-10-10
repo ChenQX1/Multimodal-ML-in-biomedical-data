@@ -36,7 +36,7 @@ class CTDataLoader(DataLoader):
                 'shuffle': is_training,
                 'num_workers': args.num_workers,
                 'drop_last': True,
-                'prefetch_factor': 2,
+                'prefetch_factor': 4,
                 'pin_memory': True
             }
             super(CTDataLoader, self).__init__(**tmp_params)
