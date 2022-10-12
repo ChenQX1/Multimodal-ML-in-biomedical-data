@@ -5,5 +5,8 @@ sgd_dampening: 0.9
 weight_decay: 0.001
 
 lr_scheduler: multi_step
-lr_milestones: "20, 40" 
+lr_milestones: 20, 40 
 lr_decay_gamma: 0.1
+
+# lr_scheduler: step
+lr_decay_step: 30

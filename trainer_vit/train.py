@@ -45,15 +45,20 @@ def train(cfgs: DictConfig):
         with open_dict(cfgs):
             cfgs.common.start_epoch = ckpt_info['epoch'] + 1
     else:
-        model = models.__dict__[cfgs.model.model]((cfgs.dataset.num_slices, *cfgs.dataset.resize_shape), cfgs.model.n_patches,
-                    cfgs.model.hidden_d, cfgs.model.h_heads, cfgs.common.num_classes, cfgs.model.n_layers, cfgs.model.k, cfgs.model.drop_p)
+        model = models.__dict__[
+            cfgs.model.model](
+            (cfgs.dataset.num_slices, *cfgs.dataset.resize_shape),
+            cfgs.model.n_patches, cfgs.model.hidden_d, cfgs.model.h_heads, cfgs.
+            common.num_classes, cfgs.model.n_layers, cfgs.model.k, cfgs.model.
+            drop_p)
     model = model.to(device)
 
     # Optimizer
     optimizer = util.get_optimizer(model.parameters(), args=cfgs.optimizer)
     lr_schduler = util.get_scheduler(optimizer, cfgs.optimizer)
     criterion = util.get_loss_fn(
-        is_classification=True, dataset=cfgs.dataset.dataset, size_average=False)
+        is_classification=True, dataset=cfgs.dataset.dataset,
+        size_average=False)
     saver = ModelSaver(cfgs.common.save_dir, cfgs.common.epochs_per_save,
                        cfgs.common.max_ckpts, cfgs.common.best_ckpt_metric, cfgs.common.maximize_metric)
     # ----------- Traing Loop ----------
@@ -90,8 +95,9 @@ def train(cfgs: DictConfig):
         print(
             f'    epoch {i} training loss:    {loss_train[-1]}, validation loss:  {loss_val[-1]}, time: {time() - ts}')
         if local_rank == 0:
-            saver.save(
-                i, model, optimizer, lr_schduler, device, metric_val=loss_val[-1])
+            saver.save(i, model, optimizer, lr_schduler,
+                       device, metric_val=loss_val[-1])
+        lr_schduler.step()
 
 
 if __name__ == "__main__":

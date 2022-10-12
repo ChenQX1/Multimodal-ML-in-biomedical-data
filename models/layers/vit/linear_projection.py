@@ -26,8 +26,8 @@ class LinearProjection(nn.Module):
         self.pos_encoding = nn.parameter.Parameter(cyclical_encode(self.n_patches ** 2 + 1, self.hidden_d))
     
     def forward(self, x: torch.Tensor):
-        n, c, h, w = x.shape
-        patches = x.reshape(n, self.n_patches ** 2, self.input_d)   # (n, # patches, patch dim)
+        b, c, h, w = x.shape
+        patches = x.reshape(b, self.n_patches ** 2, self.input_d)   # (b, # patches, patch dim)
 
         tokens = self.linear_map(patches)
         # classification token
@@ -39,6 +39,6 @@ class LinearProjection(nn.Module):
         # pos_encoding = torch.from_numpy(
         #     pos_encode(self.n_patches ** 2 + 1, self.hidden_d)
         # ).repeat(n, 1, 1)
-        tokens += self.pos_encoding.repeat(n, 1, 1)
+        tokens += self.pos_encoding.repeat(b, 1, 1)
 
         return tokens
