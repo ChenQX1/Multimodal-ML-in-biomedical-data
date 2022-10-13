@@ -10,3 +10,4 @@ def plot_loss(train_loss: List[float], val_loss: List[int], save_dir: str):
     plt.plot(np.arange(l), val_loss, label='val loss')
     plt.legend(loc='best')
     plt.savefig('/'.join([save_dir, 'loss_log.png']))
+    plt.close('all')
