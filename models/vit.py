@@ -50,9 +50,9 @@ class MyViT(nn.Module):
 class ViTPytorch(ViT):
     def __init__(
             self, input_shape, n_patches, hidden_d, h_heads, out_d, n_layers,
-            k: int = 4, drop_p: float = 0.) -> None:
+            k: int = 4, drop_p: float = 0., transformer_name = 'B_32_imagenet1k') -> None:
 
-        super().__init__(name='B_32_imagenet1k', pretrained=True, patches=16, dim=768, ff_dim=3072, num_heads=h_heads,
+        super().__init__(name=transformer_name, pretrained=True, patches=16, dim=768, ff_dim=3072, num_heads=h_heads,
                          num_layers=n_layers, attention_dropout_rate=0., dropout_rate=drop_p,
                          representation_size=None, load_repr_layer=False, classifier='token',
                          positional_embedding='1d', in_channels=3, image_size=384, num_classes=out_d)

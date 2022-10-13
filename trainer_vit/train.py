@@ -47,8 +47,7 @@ def train(cfgs: DictConfig):
             cfgs.model.model](
             (cfgs.dataset.num_slices, *cfgs.dataset.resize_shape),
             cfgs.model.n_patches, cfgs.model.hidden_d, cfgs.model.h_heads, cfgs.
-            common.num_classes, cfgs.model.n_layers, cfgs.model.k, cfgs.model.
-            drop_p)
+            common.num_classes, cfgs.model.n_layers, cfgs.model.k, cfgs.model.drop_p, cfgs.model.transformer_name)
     model = model.to(device)
 
     # Optimizer
