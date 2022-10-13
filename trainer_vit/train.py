@@ -9,7 +9,6 @@ import torch.nn as nn
 import torch
 from typing import Dict
 from time import time
-import pickle
 from collections import defaultdict
 from args import ConfigParser
 from logger.train_logger import TrainLogger
@@ -18,8 +17,7 @@ import models
 from saver.model_saver import ModelSaver
 from data_loader import CTDataLoader
 import util
-import os
-import sys
+from logger.my_logger import plot_loss
 
 
 @hydra.main(config_path='config', config_name='ct_vit', version_base='1.2')
@@ -98,6 +96,7 @@ def train(cfgs: DictConfig):
             saver.save(i, model, optimizer, lr_schduler,
                        device, metric_val=loss_val[-1])
         lr_schduler.step()
+        plot_loss(loss_train, loss_val, cfgs.common.save_dir)
 
 
 if __name__ == "__main__":
