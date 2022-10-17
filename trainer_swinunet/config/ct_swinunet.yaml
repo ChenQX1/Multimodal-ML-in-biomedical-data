@@ -1,0 +1,8 @@
+defaults:
+    - dataset: radfusion_ct
+    - model: swinunet
+    - optimizer: sgd
+    - common: common
+
+name: ct_swinunet
+fusion: 

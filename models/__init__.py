@@ -4,3 +4,4 @@ from .elasticnet import ElasticNet
 from .fusion_model import FusionModel
 from .tabnet import TabNet
 from .vit import MyViT, ViTPytorch
+from .swin_unet import MySwinUnet

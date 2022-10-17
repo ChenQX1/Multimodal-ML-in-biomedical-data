@@ -7,5 +7,5 @@ k: 4    # scale multiplier
 drop_p: 0.2
 
 ckpt_path: ckpts/vit.pth
-use_pretrained: False
+use_pretrained: True
 transformer_name: L_32_imagenet1k # B_32_imagenet1k, L_32_imagenet1k
