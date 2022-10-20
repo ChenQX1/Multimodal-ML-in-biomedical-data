@@ -1,7 +1,7 @@
 model: MySwinUnet
 
-attn_drop_p: 0.1
-drop_p: 0.2
+attn_drop_p: 0.
+drop_p: 0.1
 
 ckpt_path: ckpts/swinunet.pth
 use_pretrained: False

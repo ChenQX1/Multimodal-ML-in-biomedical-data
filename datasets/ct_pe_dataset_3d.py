@@ -121,7 +121,7 @@ class CTPEDataset3d(BaseCTDataset):
         volume = self._load_volume(ctpe, start_idx)
         volume = self._transform(volume)
 
-        is_abnormal = torch.tensor([self._is_abnormal(ctpe, start_idx)], dtype=torch.float32)
+        is_abnormal = torch.as_tensor([self._is_abnormal(ctpe, start_idx)], dtype=torch.float32)
 
         # Pass series info to combine window-level predictions
         target = {'is_abnormal': is_abnormal,
@@ -198,7 +198,7 @@ class CTPEDataset3d(BaseCTDataset):
             with h5py.File(os.path.join(self.data_dir, 'data.hdf5'), 'r') as hdf5_fh:
                 volume = hdf5_fh[str(ctpe.study_num)][start_idx:start_idx + self.num_slices]
         else:
-            volume = np.load('/'.join([self.data_dir, f'{str(ctpe.study_num)}.npy']))[start_idx:start_idx + self.num_slices]
+            volume = np.load('/'.join([self.data_dir, f'{str(ctpe.study_num)}.npy']), mmap_mode='r')[start_idx:start_idx + self.num_slices]
 
         return volume
 

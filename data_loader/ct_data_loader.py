@@ -37,7 +37,8 @@ class CTDataLoader(DataLoader):
                 'num_workers': args.num_workers,
                 'drop_last': True,
                 'prefetch_factor': 4,
-                'pin_memory': True
+                'pin_memory': True,
+                'persistent_workers': True
             }
             super(CTDataLoader, self).__init__(**tmp_params)
         else:
