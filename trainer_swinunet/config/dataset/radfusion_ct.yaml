@@ -7,7 +7,7 @@ abnormal_prob: 0.3
 include_normals: True
 num_slices: 24
 crop_shape:
-resize_shape: [224, 224]
+resize_shape: [512, 512]
 pe_types: [central, segmental]
 use_hem: False
 hide_probability: 0

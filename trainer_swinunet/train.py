@@ -44,9 +44,10 @@ def train(cfgs: DictConfig):
             cfgs.common.start_epoch = ckpt_info['epoch'] + 1
     else:
         model = models.__dict__[cfgs.model.model](
+            img_size = cfgs.dataset.resize_shape[0],
             in_chans=cfgs.dataset.num_slices,
             num_classes=cfgs.dataset.num_slices, drop_rate=cfgs.model.drop_p,
-            attn_drop_rate=cfgs.model.attn_drop_p)
+            attn_drop_rate=cfgs.model.attn_drop_p, embed_dim=cfgs.model.embed_dim)
         model.load(cfgs.model.pretrained_ckpt_path)
     model = model.to(device)
 

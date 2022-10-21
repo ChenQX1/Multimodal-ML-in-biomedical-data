@@ -582,8 +582,9 @@ class SwinTransformerSys(nn.Module):
     """
 
     def __init__(self, img_size=224, patch_size=4, in_chans=3, num_classes=1000,
-                 embed_dim=96, depths=[2, 2, 2, 2], depths_decoder=[1, 2, 2, 2], num_heads=[3, 6, 12, 24],
-                 window_size=7, mlp_ratio=4., qkv_bias=True, qk_scale=None,
+                 embed_dim=96, depths=[2, 2, 2, 2, 2, 2], depths_decoder=[1, 2, 2, 2, 2, 2],
+                 num_heads=[3, 6, 12, 24, 24, 24],
+                 window_size=8, mlp_ratio=4., qkv_bias=True, qk_scale=None,
                  drop_rate=0., attn_drop_rate=0., drop_path_rate=0.1,
                  norm_layer=nn.LayerNorm, ape=False, patch_norm=True,
                  use_checkpoint=False, final_upsample="expand_first", **kwargs):
@@ -709,11 +710,12 @@ class SwinTransformerSys(nn.Module):
 
     #Dencoder and Skip connection
     def forward_up_features(self, x, x_downsample):
+        block_nums = len(x_downsample)
         for inx, layer_up in enumerate(self.layers_up):
             if inx == 0:
                 x = layer_up(x)
             else:
-                x = torch.cat([x,x_downsample[3-inx]],-1)
+                x = torch.cat([x,x_downsample[block_nums - 1 -inx]],-1)
                 x = self.concat_back_dim[inx](x)
                 x = layer_up(x)
 
@@ -736,9 +738,6 @@ class SwinTransformerSys(nn.Module):
 
     def forward(self, x):
         x, x_downsample = self.forward_features(x)
-        print(x.shape)
-        for tt in x_downsample:
-            print(tt.shape)
         x = self.forward_up_features(x,x_downsample)
         x = self.up_x4(x)
 

@@ -2,6 +2,7 @@ model: MySwinUnet
 
 attn_drop_p: 0.
 drop_p: 0.1
+embed_dim: 96
 
 ckpt_path: ckpts/swinunet.pth
 use_pretrained: False

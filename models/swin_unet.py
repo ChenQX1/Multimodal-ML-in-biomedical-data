@@ -2,6 +2,7 @@ from .layers.swin_unet.swin_transformer_unet_skip_expand_decoder_sys import Swin
 import torch.nn as nn
 import torch
 from copy import deepcopy
+from torchvision.models import resnet18
 
 
 class MySwinUnet(SwinTransformerSys):
@@ -12,15 +13,31 @@ class MySwinUnet(SwinTransformerSys):
             MySwinUnet, self).__init__(
             img_size=img_size, patch_size=patch_size, in_chans=in_chans,
             num_classes=num_classes, embed_dim=embed_dim, **kwargs)
-        self.output1 = nn.Sequential(
-            nn.Conv2d(num_classes, num_classes // 2, kernel_size=3),
-            nn.ReLU(),
-            nn.Conv2d(num_classes // 2, 1, kernel_size=3),
-            nn.ReLU()
+
+        # self.output1 = nn.Sequential(
+        #     nn.Conv2d(num_classes, num_classes // 2, kernel_size=3),
+        #     nn.ReLU(),
+        #     nn.Conv2d(num_classes // 2, 1, kernel_size=3),
+        #     nn.ReLU()
+        # )
+        # self.output2 = nn.Linear((img_size - 4) ** 2, 1)
+
+        self.cls_head = resnet18()
+        num_feats = self.cls_head.fc.in_features
+        self.cls_head.fc = nn.Linear(num_feats, 1)
+        self.cls_head.conv1 = nn.Conv2d(
+            in_channels=num_classes,
+            out_channels=self.cls_head.conv1.out_channels,
+            kernel_size=self.cls_head.conv1.kernel_size,
+            stride=self.cls_head.conv1.stride,
+            padding=self.cls_head.conv1.padding,
+            bias=self.cls_head.conv1.bias
         )
-        self.output2 = nn.Linear((img_size - 4) ** 2, 1)
+
 
         self.model_args = {
+            'img_size': img_size,
+            'patch_size': patch_size,
             'in_chans': in_chans,
             'num_classes': num_classes,
             'embed_dim': embed_dim
@@ -31,9 +48,12 @@ class MySwinUnet(SwinTransformerSys):
         x, x_downsample = self.forward_features(x)
         x = self.forward_up_features(x, x_downsample)
         x = self.up_x4(x)
-        x = self.output1(x)
-        x = x.view(x.shape[0], -1)
-        x = self.output2(x)
+        
+        x = self.cls_head(x)
+
+        # x = self.output1(x)
+        # x = x.view(x.shape[0], -1)
+        # x = self.output2(x)
 
         return x
 
